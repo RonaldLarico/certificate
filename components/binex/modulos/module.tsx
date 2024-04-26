@@ -1,60 +1,55 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { useDropzone } from 'react-dropzone';
 import Modal from '@/components/share/Modal'; // Importa el componente Modal
 
 const Module = () => {
   const [numModules, setNumModules] = useState(1);
-  const [imageFiles, setImageFiles] = useState<File[]>([new File([], "")]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
+  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null, excelData: string[] | null }[]>(Array(numModules).fill({ image: null, excelData: null }));
   const [excelData, setExcelData] = useState<any[]>([]);
-  const [modalImageIndex, setModalImageIndex] = useState<number | null>(null);
-  const [multiplicationCount, setMultiplicationCount] = useState<number>(0);
+  const [modalImageUrl, setModalImageUrl] = useState<string>("");
+  const [showViewButton, setShowViewButton] = useState<boolean>(false);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
-    setImageFiles(Array(selectedNumModules).fill(null));
-    setExcelFiles(Array(selectedNumModules).fill(null));
+    // Limpiar archivos al cambiar el número de módulos
+    setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
+    setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
+    setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
+    setExcelData([]);
   };
 
-  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const eventFiles = event.target.files;
     if (eventFiles && eventFiles.length > 0) {
-      const newImageFiles = [...imageFiles];
-      newImageFiles[index] = eventFiles[0];
+      const newImageFiles = Array.from(eventFiles).slice(0, numModules);
       setImageFiles(newImageFiles);
-
-      if (eventFiles[0].type.startsWith('image')) {
-        const multipliedImages = Array.from({ length: numModules }, () => eventFiles[0]);
-        setImageFiles((prevImageFiles) => {
-          const updatedFiles = [...prevImageFiles];
-          updatedFiles[index] = eventFiles[0];
-          return updatedFiles;
-        });
-        setMultiplicationCount((prevCount) => prevCount + 1);
-      } else {
-        console.error('El archivo seleccionado no es una imagen');
-      }
+      setShowViewButton(true);
     }
   };
 
-  const handleExcelFileChange = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const newExcelFiles = [...excelFiles];
-      newExcelFiles[index] = event.target.files[0];
+  const handleExcelFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const eventFiles = event.target.files;
+    if (eventFiles && eventFiles.length > 0) {
+      const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array((e?.target as FileReader).result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const excelData = XLSX.utils.sheet_to_json(sheet);
-        setExcelData(excelData);
-      };
-      reader.readAsArrayBuffer(event.target.files[0]);
+      newExcelFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = new Uint8Array((e?.target as FileReader).result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const excelData = XLSX.utils.sheet_to_json(sheet);
+          setExcelData(prevData => [...prevData, excelData]);
+        };
+        reader.readAsArrayBuffer(file);
+      });
     }
   };
 
@@ -63,18 +58,28 @@ const Module = () => {
     // Por ejemplo, puedes usar excelData para modificar las imágenes según alguna regla específica
   }, [excelData]);
 
-  const openModal = (index: number) => {
-    setModalImageIndex(index);
+  /* const {getRootProps, getInputProps} = useDropzone({
+    onDrop: (acceptedFiles: File[]) => {
+      const newImageFiles = acceptedFiles.slice(0, numModules);
+      setImageFiles(newImageFiles);
+    }
+  }); */
+
+  const openModal = (imageUrl: string) => {
+    setModalImageUrl(imageUrl);
   };
 
   const closeModal = () => {
-    setModalImageIndex(null);
+    setModalImageUrl("");
   };
+
+  const imageFilesCount = imageFiles.filter(file => file !== null).length;
+  const excelFilesCount = excelFiles.filter(file => file !== null).length;
 
   return (
     <section className=''>
       <h1 className='mt-5 ml-5'>Módulares</h1>
-      <div className='flex justify-center mt-20 gap-6'>
+      <div className='flex justify-center mt-10 gap-6'>
         <h1 className='text-3xl font-bold'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>
           <div className='relative'>
@@ -86,43 +91,48 @@ const Module = () => {
           </div>
         </div>
       </div>
-      <div className='grid grid-cols-2 text-center'>
+      <div className='grid grid-cols-2 ml-40'>
         <div className='mt-20'>
-          <h1 className='mb-5'>Cargar imagenes</h1>
-            {imageFiles.map((file, index) => (
-              <div key={index} className="image-container relative mb-4">
-              <input type="file" accept="image/*" onChange={(e) => handleImageFileChange(e, index)} />
+          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes</h1>
+          <div className='image-container relative mb-10'>
+            <input type='file' accept="image/*" onChange={handleImageFileChange} multiple
+            className='bg-red-600/50'/>
+          </div>
+          {imageFiles.map((file, index) => (
+            <div key={index} className="image-container relative mb-4 flex justify-between items-center">
               {file && (
-                <div>
-                  <button onClick={() => openModal(index)}>Ver</button>
+                <div className='bg-red-600/35 p-2 w-80 rounded-lg'>
+                  <p className=''>{file.name}</p>
                 </div>
               )}
-              </div>
-            ))}
+              {showViewButton && (
+                <button onClick={() => openModal(URL.createObjectURL(file))} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
+              )}
+            </div>
+          ))}
+          <p className=''>Archivos de imagenes mostrados: {imageFilesCount}</p>
         </div>
         <div className='mt-20'>
-          <h1 className='mb-5'>Cargar archivo excel</h1>
+          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel</h1>
+          <div className='relative mb-10'>
+          <input type="file" accept=".xlsx, .xls" onChange={handleExcelFileChange} multiple
+            className='bg-green-600/50' />
+          </div>
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
-              <input type="file" accept=".xlsx, .xls" onChange={(e) => handleExcelFileChange(e, index)} />
               {file && (
-                <div className='text-'>
-                  <p>Archivo seleccionado: {file.name}</p>
+                <div className='inline-flex'>
+                  <p className='w-80 p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>
           ))}
+          <p>Archivos de excel mostrados: {excelFilesCount}</p>
         </div>
       </div>
 
-      {/* Modal */}
-      {modalImageIndex !== null && (
-        <Modal
-          imageUrlArray={imageFiles
-            .filter(file => file && file.type.startsWith('image')) // Filtrar solo archivos de imagen
-            .map(file => URL.createObjectURL(file))}
-          onClose={closeModal}
-        />
+      {modalImageUrl && (
+        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} />
       )}
 
     </section>
