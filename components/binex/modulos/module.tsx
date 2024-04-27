@@ -12,11 +12,11 @@ const Module = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [modalImageUrl, setModalImageUrl] = useState<string>("");
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
+  const [modalExcelData, setModalExcelData] = useState<any[]>([]);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
-    // Limpiar archivos al cambiar el número de módulos
     setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
     setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
     setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
@@ -46,7 +46,7 @@ const Module = () => {
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           const excelData = XLSX.utils.sheet_to_json(sheet);
-          setExcelData(prevData => [...prevData, excelData]);
+          setModalExcelData(excelData);
         };
         reader.readAsArrayBuffer(file);
       });
@@ -58,13 +58,6 @@ const Module = () => {
     // Por ejemplo, puedes usar excelData para modificar las imágenes según alguna regla específica
   }, [excelData]);
 
-  /* const {getRootProps, getInputProps} = useDropzone({
-    onDrop: (acceptedFiles: File[]) => {
-      const newImageFiles = acceptedFiles.slice(0, numModules);
-      setImageFiles(newImageFiles);
-    }
-  }); */
-
   const openModal = (imageUrl: string) => {
     setModalImageUrl(imageUrl);
   };
@@ -73,8 +66,19 @@ const Module = () => {
     setModalImageUrl("");
   };
 
+  const clearFiles = () => {
+    setImageFiles([]);
+    setExcelFiles(Array(numModules).fill(null));
+    setShowViewButton(false);
+  };
+
   const imageFilesCount = imageFiles.filter(file => file !== null).length;
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
+
+  const longTexts = [
+    { text: 'CERTIFICADO', style: 'top-60 left-64 text-white text-6xl font-extrabold text-black' },
+    { text: 'Texto largo 2...', style: 'top-40 left-40 text-white text-lg font-bold text-black' },
+  ];
 
   return (
     <section className=''>
@@ -130,11 +134,10 @@ const Module = () => {
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
         </div>
       </div>
-
+      <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
       {modalImageUrl && (
-        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} />
+        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} longTexts={longTexts} excelData={modalExcelData}/>
       )}
-
     </section>
   );
 };
