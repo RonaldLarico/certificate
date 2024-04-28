@@ -4,32 +4,20 @@ interface ModalProps {
   imageUrl: string;
   onClose: () => void;
   numModules: number;
+  currentIndex: number;
   longTexts?: { text: string; style: string }[];
-  excelData: ExcelRow[];
+  ActividadAcademica: string | null; // Nueva línea para incluir actividad académica
+  FechaInicio: string | null; // Nueva línea para incluir la fecha
+  Nombres: string[];
 }
 
-interface ExcelRow {
-  Correo: string;
-  Nombres: string;
-  Codigo: string;
-  ActividadAcademica: string;
-  Participacion: string;
-  Instituciones: string;
-  Horas: string;
-  Inicio: string;
-  Finalizacion: string;
-  YourTop: string;
-  YourLeft: string;
-}
 
-const Modal = ({ imageUrl, onClose, numModules, longTexts, excelData }: ModalProps) => {
-  console.log(excelData)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const Modal = ({ imageUrl, onClose, numModules, longTexts, currentIndex, ActividadAcademica, FechaInicio, Nombres }: ModalProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(currentIndex);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    // Crear un array con la misma imagen replicada 10 veces
-    const newImageUrls = Array.from({ length: numModules * 10 }, () => imageUrl);
+    const newImageUrls = Array.from({ length: numModules }, (_, index) => imageUrl);
     setImageUrls(newImageUrls);
   }, [imageUrl, numModules]);
 
@@ -41,7 +29,6 @@ const Modal = ({ imageUrl, onClose, numModules, longTexts, excelData }: ModalPro
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
   };
 
-  const filteredExcelData = excelData.slice(11);
 
   return (
     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center bg-gray-800 bg-opacity-75 backdrop-blur">
@@ -57,20 +44,28 @@ const Modal = ({ imageUrl, onClose, numModules, longTexts, excelData }: ModalPro
             </div>
           ))}
 
-<div className="absolute top-80 left-0 h-full w-full flex flex-col items-start">
-          {filteredExcelData.map((row, index) => (
-            <div key={index} className="p-2 bg-black bg-opacity-75 rounded-md mb-2">
-              <p><strong>DNI:</strong> {row.Correo}</p>
-              <p><strong>Nombre:</strong> {row.Nombres}</p>
-              <p><strong>Código:</strong> {row.Codigo}</p>
-              <p><strong>Actividad:</strong> {row.ActividadAcademica}</p>
-              <p><strong>Participacion:</strong> {row.Participacion}</p>
-              <p><strong>Institucion:</strong> {row.Instituciones}</p>
-              <p><strong>Horas</strong> {row.Horas}</p>
-              <p><strong>FechaInicio</strong> {row.Inicio}</p>
-              <p><strong>FechaF:</strong> {row.Finalizacion}</p>
+          {ActividadAcademica && (
+            <div className="absolute top-96 left-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
+              Actividad académica: {ActividadAcademica}
             </div>
-          ))}
+          )}
+          {FechaInicio && (
+            <div className="absolute top-80 right-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
+              Fecha Inicio: {FechaInicio}
+            </div>
+          )}
+
+        <div className="absolute top-80 left-0 h-full w-full flex flex-col items-start">
+          {Nombres && (
+            <div className="p-2 bg-black bg-opacity-75 rounded-md mb-2">
+              <p><strong>Nombres:</strong></p>
+              <ul>
+                {Nombres.map((nombre, index) => (
+                  <li key={index}>{nombre}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <button onClick={handlePrev} className="absolute top-1/2 left-0 transform -translate-y-1/2 m-4 px-4 py-1 text-xl font-bold text-white bg-gray-500 rounded-xl">
@@ -81,7 +76,7 @@ const Modal = ({ imageUrl, onClose, numModules, longTexts, excelData }: ModalPro
         </button>
 
         <div className="absolute bottom-0 left-0 m-4 px-4 py-1 text-xl font-bold text-white bg-gray-500 rounded-xl">
-          Imágenes replicadas: {numModules * 10}
+          Imágenes replicadas: {imageUrls.length}
         </div>
       </div>
     </div>

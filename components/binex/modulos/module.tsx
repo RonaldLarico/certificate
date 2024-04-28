@@ -8,18 +8,23 @@ const Module = () => {
   const [numModules, setNumModules] = useState(1);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
-  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null, excelData: string[] | null }[]>(Array(numModules).fill({ image: null, excelData: null }));
+  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData: File | null }[]>([]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [modalImageUrl, setModalImageUrl] = useState<string>("");
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
   const [modalExcelData, setModalExcelData] = useState<any[]>([]);
+  const [actividadAcademica, setActividadAcademica] = useState<string | null>(null);
+  const [fechaInicio, setFecha] = useState<string | null>(null);
+  const [nombres, setNombres] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
     setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
     setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
-    setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
+    //setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
     setExcelData([]);
   };
 
@@ -28,6 +33,16 @@ const Module = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newImageFiles = Array.from(eventFiles).slice(0, numModules);
       setImageFiles(newImageFiles);
+      const availableExcelFiles = excelFiles.filter((file) => file !== null);
+    if (availableExcelFiles.length >= imagesAndExcel.length) {
+      const updatedImagesAndExcel = imagesAndExcel.map((item, index) => ({
+        image: newImageFiles[index],
+        excelData: availableExcelFiles[index] || null,
+      }));
+      setImagesAndExcel(updatedImagesAndExcel);
+    } else {
+      // Handle case where there are not enough Excel files available
+    }
       setShowViewButton(true);
     }
   };
@@ -37,7 +52,12 @@ const Module = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
-
+      setImagesAndExcel(prevState =>
+        prevState.map((item, index) => ({
+          image: item.image,
+          excelData: index < newExcelFiles.length ? newExcelFiles[index] : null
+        }))
+      );
       newExcelFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -45,8 +65,14 @@ const Module = () => {
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          const excelData = XLSX.utils.sheet_to_json(sheet);
-          setModalExcelData(excelData);
+          const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          const nombres = sheetData.slice(11).map((row: string[]) => row[0]);
+          const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
+          const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
+          //setModalExcelData(excelData);
+          setNombres(nombres);
+          setActividadAcademica(actividadAcademica); // Nueva línea para guardar la actividad académica en el estado
+          setFecha(fechaInicio); // Nueva línea para guardar la fecha en el estado
         };
         reader.readAsArrayBuffer(file);
       });
@@ -69,15 +95,20 @@ const Module = () => {
   const clearFiles = () => {
     setImageFiles([]);
     setExcelFiles(Array(numModules).fill(null));
+    setImagesAndExcel([]);
     setShowViewButton(false);
+    setExcelData([]);
+    setActividadAcademica(null);
+    setFecha(null);
+    setNombres([]);
   };
 
   const imageFilesCount = imageFiles.filter(file => file !== null).length;
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
 
   const longTexts = [
-    { text: 'CERTIFICADO', style: 'top-60 left-64 text-white text-6xl font-extrabold text-black' },
-    { text: 'Texto largo 2...', style: 'top-40 left-40 text-white text-lg font-bold text-black' },
+    { text: 'CERTIFICADO', style: 'top-64 left-56 text-black text-7xl font-extrabold' },
+    { text: 'Otorgado a:', style: 'top-[330px] left-[415px] text-[22px] font- text-gray-400' },
   ];
 
   return (
@@ -136,7 +167,7 @@ const Module = () => {
       </div>
       <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
       {modalImageUrl && (
-        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} longTexts={longTexts} excelData={modalExcelData}/>
+        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} longTexts={longTexts}  ActividadAcademica={actividadAcademica} FechaInicio={fechaInicio} Nombres={nombres} currentIndex={currentIndex}/>
       )}
     </section>
   );
