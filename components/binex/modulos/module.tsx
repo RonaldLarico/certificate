@@ -1,3 +1,4 @@
+
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
@@ -66,7 +67,8 @@ const Module = () => {
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        const nombres = sheetData.slice(11).map((row: string[]) => row[0]);
+        const filteredData = sheetData.filter((row) => row.length > 0 && row.some((cell) => typeof cell === 'string' && cell.trim() !== ''));
+        const nombres = filteredData.slice(11).map((row: string[]) => row[0]);
         const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
         const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
         resolve({ actividadAcademica, fechaInicio, nombres });

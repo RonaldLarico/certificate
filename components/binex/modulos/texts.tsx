@@ -13,6 +13,7 @@ interface ImageModalContentProps {
 const ImageModalContent = ({ imageUrl, numModules, longTexts, excelData }: ImageModalContentProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  console.log(excelData);
 
   useEffect(() => {
     const newImageUrls = Array.from({ length: numModules }, (_, index) => imageUrl);
