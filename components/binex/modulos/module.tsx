@@ -1,7 +1,6 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { useDropzone } from 'react-dropzone';
 import Modal from '@/components/share/Modal'; // Importa el componente Modal
 import ImageModalContent from './texts';
 
@@ -19,12 +18,7 @@ const Module = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [modalImageUrl, setModalImageUrl] = useState<string>("");
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
-  const [modalExcelData, setModalExcelData] = useState<any[]>([]);
-  const [actividadAcademica, setActividadAcademica] = useState<string | null>(null);
-  const [fechaInicio, setFecha] = useState<string | null>(null);
-  const [nombres, setNombres] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -41,6 +35,7 @@ const Module = () => {
       const newImageFiles = Array.from(eventFiles).slice(0, numModules);
       setImageFiles(newImageFiles);
       const updatedImageAndExcel = newImageFiles.map(image => ({ image, excelData: null }));
+      console.log("Nombre de la imagen", updatedImageAndExcel);
       setImagesAndExcel(updatedImageAndExcel);
       setShowViewButton(true);
     }
@@ -62,11 +57,9 @@ const Module = () => {
     }
   };
 
-
   const extractExcelData = async (file: File): Promise<ExcelData> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-  
       reader.onload = (e) => {
         const data = new Uint8Array((e?.target as FileReader).result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
@@ -78,11 +71,9 @@ const Module = () => {
         const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
         resolve({ actividadAcademica, fechaInicio, nombres });
       };
-  
       reader.onerror = (error) => {
         reject(error);
       };
-  
       reader.readAsArrayBuffer(file);
     });
   };
@@ -92,8 +83,9 @@ const Module = () => {
     // Por ejemplo, puedes usar excelData para modificar las imágenes según alguna regla específica
   }, [excelData]);
 
-  const openModal = (imageUrl: string) => {
+  const openModal = (imageUrl: string, index:number) => {
     setModalImageUrl(imageUrl);
+    setCurrentIndex(index)
   };
 
   const closeModal = () => {
@@ -145,7 +137,7 @@ const Module = () => {
                 </div>
               )}
               {showViewButton && (
-                <button onClick={() => openModal(URL.createObjectURL(file))} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
+                <button onClick={() => openModal(URL.createObjectURL(file), index)} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
               )}
             </div>
           ))}
@@ -171,19 +163,18 @@ const Module = () => {
       </div>
       <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
       {modalImageUrl && (
-  <Modal onClose={closeModal}>
-    <ImageModalContent
-      imageUrl={modalImageUrl}
-      numModules={numModules}
-      excelData={imagesAndExcel[currentIndex]?.excelData}
-      longTexts={longTexts}
-      actividadAcademica={imagesAndExcel[currentIndex]?.excelData?.actividadAcademica ?? null}
-  fechaInicio={imagesAndExcel[currentIndex]?.excelData?.fechaInicio ?? null}
-  nombres={imagesAndExcel[currentIndex]?.excelData?.nombres ?? []}
-    />
-  </Modal>
-)}
-
+        <Modal onClose={closeModal}>
+          <ImageModalContent
+            imageUrl={modalImageUrl}
+            numModules={numModules}
+            excelData={imagesAndExcel[currentIndex]?.excelData}
+            longTexts={longTexts}
+            actividadAcademica={imagesAndExcel[currentIndex]?.excelData?.actividadAcademica ?? null}
+            fechaInicio={imagesAndExcel[currentIndex]?.excelData?.fechaInicio ?? null}
+            nombres={imagesAndExcel[currentIndex]?.excelData?.nombres ?? []}
+          />
+        </Modal>
+      )}
     </section>
   );
 };
