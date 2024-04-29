@@ -3,12 +3,19 @@ import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { useDropzone } from 'react-dropzone';
 import Modal from '@/components/share/Modal'; // Importa el componente Modal
+import ImageModalContent from './texts';
+
+interface ExcelData {
+  actividadAcademica: string | null;
+  fechaInicio: string | null;
+  nombres: string[];
+}
 
 const Module = () => {
   const [numModules, setNumModules] = useState(1);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
-  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData: File | null }[]>([]);
+  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [modalImageUrl, setModalImageUrl] = useState<string>("");
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
@@ -24,7 +31,7 @@ const Module = () => {
     setNumModules(selectedNumModules);
     setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
     setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
-    //setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
+    setImagesAndExcel(Array(selectedNumModules).fill({ image: null, excelData: null }));
     setExcelData([]);
   };
 
@@ -33,50 +40,51 @@ const Module = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newImageFiles = Array.from(eventFiles).slice(0, numModules);
       setImageFiles(newImageFiles);
-      const availableExcelFiles = excelFiles.filter((file) => file !== null);
-    if (availableExcelFiles.length >= imagesAndExcel.length) {
-      const updatedImagesAndExcel = imagesAndExcel.map((item, index) => ({
-        image: newImageFiles[index],
-        excelData: availableExcelFiles[index] || null,
-      }));
-      setImagesAndExcel(updatedImagesAndExcel);
-    } else {
-      // Handle case where there are not enough Excel files available
-    }
+      const updatedImageAndExcel = newImageFiles.map(image => ({ image, excelData: null }));
+      setImagesAndExcel(updatedImageAndExcel);
       setShowViewButton(true);
     }
   };
 
-  const handleExcelFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleExcelFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const eventFiles = event.target.files;
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
-      setImagesAndExcel(prevState =>
-        prevState.map((item, index) => ({
-          image: item.image,
-          excelData: index < newExcelFiles.length ? newExcelFiles[index] : null
-        }))
-      );
-      newExcelFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const data = new Uint8Array((e?.target as FileReader).result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const sheet = workbook.Sheets[sheetName];
-          const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-          const nombres = sheetData.slice(11).map((row: string[]) => row[0]);
-          const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
-          const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
-          //setModalExcelData(excelData);
-          setNombres(nombres);
-          setActividadAcademica(actividadAcademica); // Nueva línea para guardar la actividad académica en el estado
-          setFecha(fechaInicio); // Nueva línea para guardar la fecha en el estado
+      const updatedImageAndExcel = await Promise.all(newExcelFiles.map(async (file) => {
+        return {
+          image: null,
+          excelData: await extractExcelData(file)
         };
-        reader.readAsArrayBuffer(file);
-      });
+      }));
+      console.log("Datos de archivos Excel extraídos:", updatedImageAndExcel);
+      setImagesAndExcel(updatedImageAndExcel);
     }
+  };
+
+
+  const extractExcelData = async (file: File): Promise<ExcelData> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = (e) => {
+        const data = new Uint8Array((e?.target as FileReader).result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const nombres = sheetData.slice(11).map((row: string[]) => row[0]);
+        const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
+        const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
+        resolve({ actividadAcademica, fechaInicio, nombres });
+      };
+  
+      reader.onerror = (error) => {
+        reject(error);
+      };
+  
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   useEffect(() => {
@@ -97,10 +105,6 @@ const Module = () => {
     setExcelFiles(Array(numModules).fill(null));
     setImagesAndExcel([]);
     setShowViewButton(false);
-    setExcelData([]);
-    setActividadAcademica(null);
-    setFecha(null);
-    setNombres([]);
   };
 
   const imageFilesCount = imageFiles.filter(file => file !== null).length;
@@ -167,8 +171,19 @@ const Module = () => {
       </div>
       <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
       {modalImageUrl && (
-        <Modal imageUrl={modalImageUrl} onClose={closeModal} numModules={numModules} longTexts={longTexts}  ActividadAcademica={actividadAcademica} FechaInicio={fechaInicio} Nombres={nombres} currentIndex={currentIndex}/>
-      )}
+  <Modal onClose={closeModal}>
+    <ImageModalContent
+      imageUrl={modalImageUrl}
+      numModules={numModules}
+      excelData={imagesAndExcel[currentIndex]?.excelData}
+      longTexts={longTexts}
+      actividadAcademica={imagesAndExcel[currentIndex]?.excelData?.actividadAcademica ?? null}
+  fechaInicio={imagesAndExcel[currentIndex]?.excelData?.fechaInicio ?? null}
+  nombres={imagesAndExcel[currentIndex]?.excelData?.nombres ?? []}
+    />
+  </Modal>
+)}
+
     </section>
   );
 };
