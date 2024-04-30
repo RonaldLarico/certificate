@@ -1,9 +1,9 @@
-
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import Modal from '@/components/share/Modal'; // Importa el componente Modal
 import ImageModalContent from './texts';
+import ImageUploader from './Image';
 
 interface ExcelData {
   actividadAcademica: string | null;
@@ -30,7 +30,80 @@ const Module = () => {
     setExcelData([]);
   };
 
-  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+ /*  const saveImageToIndexedDB = async (imageFiles: File[], groupName: string) => {
+    try {
+      // Abre la base de datos o crea una nueva si no existe
+      const request = indexedDB.open('imagesDB', 1);
+      // Maneja la actualización de la base de datos
+      request.onupgradeneeded = function(event) {
+        const db = (event.target as IDBRequest<IDBDatabase>).result;
+        // Crea un objeto de almacenamiento para el grupo específico
+        db.createObjectStore(groupName, { keyPath: 'id', autoIncrement: true });
+      };
+      // Obtiene la base de datos una vez que está disponible
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      // Inicia una transacción para el grupo específico
+      const transaction = db.transaction([groupName], 'readwrite');
+      const objectStore = transaction.objectStore(groupName);
+      // Agrega las imágenes al objeto de almacenamiento
+      await Promise.all(imageFiles.map(async (file) => {
+        const image = await readFileAsDataURL(file);
+        const data = { name: file.name, data: image };
+        objectStore.add(data);
+      }));
+      // Espera a que la transacción se complete
+      await new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+      console.log('Imágenes guardadas en IndexedDB correctamente.');
+    } catch (error) {
+      console.error('Error al guardar las imágenes en IndexedDB:', error);
+    }
+  }; */
+  /* const loadImageFromIndexedDB = async (groupName: string): Promise<{ name: string; data: string }[]> => {
+    try {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('imagesDB', 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const transaction = db.transaction([groupName], 'readonly');
+      const objectStore = transaction.objectStore(groupName);
+      const cursor = objectStore.openCursor();
+      const images: { name: string; data: string }[] = [];
+      await new Promise<void>((resolve, reject) => {
+        cursor.onsuccess = (event: any) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            images.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+        cursor.onerror = () => reject(cursor.error);
+      });
+      return images;
+    } catch (error) {
+      console.error('Error al cargar las imágenes desde IndexedDB:', error);
+      return [];
+    }
+  }; */
+
+  /* const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }; */
+
+  /* const handleImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const eventFiles = event.target.files;
     if (eventFiles && eventFiles.length > 0) {
       const newImageFiles = Array.from(eventFiles).slice(0, numModules);
@@ -39,8 +112,40 @@ const Module = () => {
       console.log("Nombre de la imagen", updatedImageAndExcel);
       setImagesAndExcel(updatedImageAndExcel);
       setShowViewButton(true);
+      try {
+        // Guardar las imágenes en IndexedDB
+        await saveImageToIndexedDB(newImageFiles, `module_${numModules}`);
+        // Determinar el nombre del grupo según el número de módulos seleccionados
+        let groupName = '';
+        switch (numModules) {
+          case 1:
+            groupName = 'cimade';
+            break;
+          case 2:
+            groupName = 'sayan';
+            break;
+          case 3:
+            groupName = 'binex';
+            break;
+          case 4:
+            groupName = 'ecomas';
+            break;
+          case 5:
+            groupName = 'promas';
+            break;
+          default:
+            groupName = 'rizo';
+            break;
+        }
+        // Cargar las imágenes del grupo correspondiente desde IndexedDB
+        const loadedImages = await loadImageFromIndexedDB(groupName);
+        // Actualizar el estado con las imágenes cargadas
+        setImagesAndExcel(loadedImages.map(image => ({ image: null, excelData: null })));
+      } catch (error) {
+        console.error('Error al cargar las imágenes desde IndexedDB:', error);
+      }
     }
-  };
+  }; */
 
   const handleExcelFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const eventFiles = event.target.files;
@@ -125,24 +230,10 @@ const Module = () => {
         </div>
       </div>
       <div className='grid grid-cols-2 ml-40'>
-        <div className='mt-20'>
-          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes</h1>
-          <div className='image-container relative mb-10'>
-            <input type='file' accept="image/*" onChange={handleImageFileChange} multiple
-            className='bg-red-600/50'/>
+        <div className=''>
+          <div className='image-container relative mb-20'>
           </div>
-          {imageFiles.map((file, index) => (
-            <div key={index} className="image-container relative mb-4 flex justify-between items-center">
-              {file && (
-                <div className='bg-red-600/35 p-2 w-80 rounded-lg'>
-                  <p className=''>{file.name}</p>
-                </div>
-              )}
-              {showViewButton && (
-                <button onClick={() => openModal(URL.createObjectURL(file), index)} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
-              )}
-            </div>
-          ))}
+          <ImageUploader numModules={numModules} onImageUpload={(files) => setShowViewButton(true)} />
           <p className=''>Archivos de imagenes mostrados: {imageFilesCount}</p>
         </div>
         <div className='mt-20'>
@@ -164,7 +255,7 @@ const Module = () => {
         </div>
       </div>
       <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
-      {modalImageUrl && (
+      {/* {modalImageUrl && (
         <Modal onClose={closeModal}>
           <ImageModalContent
             imageUrl={modalImageUrl}
@@ -176,7 +267,7 @@ const Module = () => {
             nombres={imagesAndExcel[currentIndex]?.excelData?.nombres ?? []}
           />
         </Modal>
-      )}
+      )} */}
     </section>
   );
 };

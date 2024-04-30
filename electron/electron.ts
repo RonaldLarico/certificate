@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 
 function createWindow() {
@@ -29,3 +29,7 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
+
+
+
