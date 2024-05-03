@@ -16,14 +16,21 @@ const Module = () => {
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
-  const [selectedGroup, setSelectedGroup] = useState("");
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
-    setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
-    setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
-    setExcelData([]);
+    // Si ya hay archivos de Excel cargados, mantener los existentes y ajustar según el nuevo número de módulos
+    setExcelFiles(prevFiles => {
+      if (prevFiles.length > selectedNumModules) {
+        // Si el nuevo número de módulos es menor que la cantidad actual de archivos, recortamos el array
+        return prevFiles.slice(0, selectedNumModules);
+      } else {
+        // Si el nuevo número de módulos es mayor o igual, llenamos los espacios adicionales con null
+        const diff = selectedNumModules - prevFiles.length;
+        return [...prevFiles, ...Array(diff).fill(null)];
+      }
+    });
   };
 
   const handleExcelFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +99,7 @@ const Module = () => {
         <div className='text-gray-500 items-center'>
           <div className='relative'>
             <select {...{ required: true }} name='country' className="bg-gray-100 border-2 border-gray-300 text-gray-600 text-3xl rounded-lg ps-5 p-1 font-bold" onChange={handleModuleChange}>
-              {[...Array(13)].map((_, index) => (
+              {[...Array(15)].map((_, index) => (
                 <option key={index} value={index + 1}>{String(index + 1).padStart(2, '0')}</option>
               ))}
             </select>
@@ -107,21 +114,24 @@ const Module = () => {
             <p className=''>Archivos de imagenes mostrados: {numModules}</p>
           </div>
         <div className='mt-20'>
-          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel</h1>
+          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel ({numModules})</h1>
           <div className='relative mb-10'>
-          <input type="file" accept=".xlsx, .xls" onChange={handleExcelFileChange} multiple
+          <input type="file" accept=".xlsx, .xls, .xlsm" onChange={handleExcelFileChange} multiple
             className='bg-green-600/50' />
           </div>
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
               {file && (
                 <div className='inline-flex'>
-                  <p className='w-80 p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
+                  <p className='w-auto p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>
           ))}
-          <p>Archivos de excel mostrados: {excelFilesCount}</p>
+          <p>Archivos de excel mostrados: {excelFilesCount} (para {numModules} módulos)</p>
+          {[...Array(numModules)].map((_, index) => (
+            <p key={index}>Archivos de excel para módulo {index + 1}: {excelFiles.filter((file, i) => i === index).length}</p>
+          ))}
         </div>
       </div>
       <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
