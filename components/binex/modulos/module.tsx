@@ -2,6 +2,7 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ImageUploader from './Image';
+import ImageModalContent from './texts';
 
 interface ExcelData {
   actividadAcademica: string | null;
@@ -14,16 +15,16 @@ const Module = () => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData:ExcelData | null }[]>([]);
-  const [excelData, setExcelData] = useState<any[]>([]);
+  const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
     setImageFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
     setExcelFiles(prevFiles => prevFiles.slice(0, selectedNumModules));
-    setExcelData([]);
+    setExcelData(null);
   };
 
   const handleExcelFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +40,7 @@ const Module = () => {
       }));
       console.log("Datos de archivos Excel extraídos:", updatedImageAndExcel);
       setImagesAndExcel(updatedImageAndExcel);
+      //setShowModal(true);
     }
   };
 
@@ -60,9 +62,25 @@ const Module = () => {
       reader.onerror = (error) => {
         reject(error);
       };
-      reader.readAsArrayBuffer(file);
+      reader.readAsArrayBuffer(new Blob([file]));
     });
   };
+
+  useEffect(() => {
+    const updateImagesAndExcel = async () => {
+      const updatedImagesAndExcel = await Promise.all(excelFiles.map(async (file, index) => {
+        return {
+          image: imageFiles[index],
+          excelData: await extractExcelData(file)
+        };
+      }));
+      setImagesAndExcel(updatedImagesAndExcel);
+    };
+
+    if (excelFiles.length > 0) {
+      updateImagesAndExcel();
+    }
+  }, [excelFiles, imageFiles]);
 
   useEffect(() => {
     // Aquí puedes realizar la lógica para modificar las imágenes según los datos del archivo Excel
@@ -98,12 +116,25 @@ const Module = () => {
             </select>
           </div>
         </div>
+
       </div>
+      {showModal && imagesAndExcel.map(({ image, excelData }, index) => (
+        <div key={index} className=''>
+          <ImageModalContent
+            numModules={numModules}
+            longTexts={longTexts}
+            excelData={excelData}
+            actividadAcademica={excelData?.actividadAcademica || null}
+            fechaInicio={excelData?.fechaInicio || null}
+            nombres={excelData?.nombres || []}
+          />
+        </div>
+      ))}
       <div className='grid grid-cols-2 ml-40'>
         <div className=''>
           <div className='image-container relative mb-20'>
           </div>
-            <ImageUploader numModules={numModules} onImageUpload={(files) => setShowViewButton(true)} />
+            <ImageUploader numModules={numModules} onImageUpload={(files) => setShowViewButton(true)} excelData={excelData} />
             <p className=''>Archivos de imagenes mostrados: {numModules}</p>
           </div>
         <div className='mt-20'>
