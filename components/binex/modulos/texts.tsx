@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface ImageModalContentProps {
-    imageUrl: string;
+  
     numModules: number;
     excelData: { actividadAcademica: string | null; fechaInicio: string | null; nombres: string[] } | null;
     longTexts: { text: string; style: string }[];
@@ -10,33 +10,23 @@ interface ImageModalContentProps {
     nombres: string[];
 }
 
-const ImageModalContent = ({ imageUrl, numModules, longTexts, excelData }: ImageModalContentProps) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalContentProps) => {
+
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   console.log(excelData);
 
   useEffect(() => {
-    const newImageUrls = Array.from({ length: numModules }, (_, index) => imageUrl);
+    const newImageUrls = Array.from({ length: numModules }, (_, index) => "");
     setImageUrls(newImageUrls);
-  }, [imageUrl, numModules]);
-
-  const handleNext = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
-  };
+  }, [numModules]);
 
   return (
     <>
-      <img src={imageUrls[currentImageIndex]} alt="Imagen"
-        className="mx-auto max-h-screen max-w-screen"
-        style={{ width: '297mm', height: '210mm' }}/>
+    <div className=''>
 
         {longTexts && longTexts.map((text, index) => (
-          <div key={index} className={`absolute ${text.style}`}>
-            {text.text}
+          <div key={index} className={`absolute ${text && text.style}`}>
+            {text && text.text}
           </div>
         ))}
 
@@ -60,16 +50,9 @@ const ImageModalContent = ({ imageUrl, numModules, longTexts, excelData }: Image
           </div>
         </>
       )}
-
-      <button onClick={handlePrev} className="absolute top-1/2 left-0 transform -translate-y-1/2 m-4 px-4 py-1 text-xl font-bold text-white bg-gray-500 rounded-xl">
-        &lt;
-      </button>
-      <button onClick={handleNext} className="absolute top-1/2 right-0 transform -translate-y-1/2 m-4 px-4 py-1 text-xl font-bold text-white bg-gray-500 rounded-xl">
-        &gt;
-      </button>
-
-      <div className="absolute bottom-0 left-0 m-4 px-4 py-1 text-xl font-bold text-white bg-gray-500 rounded-xl">
-        Imágenes replicadas: {imageUrls.length}
+      </div>
+      <div className="absolute top-10 left-10 text-white text-lg font-bold bg-black bg-opacity-75 p-2 rounded-md">
+        Tu texto aquí
       </div>
     </>
   );
