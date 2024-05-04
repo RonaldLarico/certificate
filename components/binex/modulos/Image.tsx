@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import Modal from '@/components/share/Modal'; // Importa el componente Modal
 import ImageModalContent from './texts';
+import { getDatabaseConnection } from '../database/index';
 
 interface ExcelData {
   actividadAcademica: string | null;
@@ -23,11 +24,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
   const [longTexts, setLongTexts] = useState<{ text: string; style: string }[]>([]);
   const [selectedExcelData, setSelectedExcelData] = useState<ExcelData | null>(null);
 
-
   useEffect(() => {
     const loadImagesFromIndexedDB = async () => {
       try {
-        const images = await getImagesFromIndexedDB();
+        const storeNames = ['cimade', 'ecomas', 'promas', 'binex', 'rizo', 'sayan'];
+        const groupName = storeNames[numModules - 1];
+        const db = await getDatabaseConnection();
+        const images = await getImagesFromIndexedDB(db, groupName);
         setStoredImages(images);
       } catch (error) {
         console.error('Error al cargar las imágenes desde IndexedDB:', error);
@@ -39,30 +42,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
   const handleImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const eventFiles = event.target.files;
     if (eventFiles && eventFiles.length > 0) {
-      const newImageFiles = Array.from(eventFiles).slice(0, numModules * 13);
-      const texts: string[] = [];
-        for (let i = 0; i < newImageFiles.length; i++) {
-            const text = prompt(`Texto para la imagen ${i + 1}`);
-            if (text) {
-                texts.push(text);
-            } else {
-                texts.push("");
-            }
-        }
-        setImageTexts(texts);
+      const newImageFiles = Array.from(eventFiles).slice(0, numModules * 15);
+      const groupName = getGroupName(numModules); // Asegúrate de que groupName se establezca correctamente aquí
+      console.log("Nombre del almacén:", groupName);
       try {
-        for (const imageFile of newImageFiles) {
-          const resizedImageBlob = await resizeImageToA4(imageFile);
-          const resizedImageFile = new File([resizedImageBlob], imageFile.name, { type: imageFile.type });
-          setImageFiles((prevFiles: File[]) => {
-            const newFiles = [...prevFiles, resizedImageFile];
-            return newFiles;
-          });
-          onImageUpload([...imageFiles, resizedImageFile]);
-          const groupName = getGroupName(numModules);
-          await saveImageToIndexedDB([resizedImageFile], groupName);
-        }
-        const images = await getImagesFromIndexedDB();
+        const db = await getDatabaseConnection();
+        await saveImageGroupToIndexedDB(db, newImageFiles, groupName); // Pasar groupName a la función saveImageGroupToIndexedDB
+        const images = await getImagesFromIndexedDB(db, groupName);
         setStoredImages(images);
       } catch (error) {
         console.error('Error al procesar las imágenes:', error);
@@ -70,84 +56,72 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
     }
   };
 
-  const saveImageToIndexedDB = async (images: File[], groupName: string) => {
-    console.log("Nombre del grupo en saveImageToIndexedDB:", groupName);
+  const clearObjectStore = (objectStore: IDBObjectStore) => {
     return new Promise<void>((resolve, reject) => {
-      const request = window.indexedDB.open('ImageDatabase', 2);
-      request.onerror = (event) => {
-        console.error('Error al abrir la base de datos:', request.error);
-        reject(request.error);
+      const clearRequest = objectStore.clear();
+      clearRequest.onsuccess = () => {
+        resolve();
       };
-      request.onupgradeneeded = (event) => {
-        console.log('onupgradeneeded event triggered');
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains('images')) {
-          console.log('Creating object store: images');
-          db.createObjectStore('images', { autoIncrement: true });
-        }
-      };
-      request.onsuccess = (event) => {
-        const db = request.result;
-        const transaction = db.transaction(['images'], 'readwrite');
-        const objectStore = transaction.objectStore('images');
-        transaction.oncomplete = () => {
-          db.close();
-          resolve(); // Aquí llamamos a resolve sin ningún argumento
-        };
-        transaction.onerror = (event) => {
-          console.error('Error al guardar las imágenes:', transaction.error);
-          reject(transaction.error);
-        };
-        images.forEach((image) => {
-          objectStore.add(image);
-        });
+      clearRequest.onerror = (event) => {
+        console.error('Error al limpiar el almacén:', clearRequest.error);
+        reject(clearRequest.error);
       };
     });
   };
 
-  const getImagesFromIndexedDB = async () => {
+  const saveImageGroupToIndexedDB = async (db: IDBDatabase, images: File[], groupName: string) => {
+    console.log("Nombre del almacén:", groupName);
+    try {
+      const transaction = db.transaction([groupName], 'readwrite');
+      const objectStore = transaction.objectStore(groupName);
+      await clearObjectStore(objectStore);
+      images.forEach(image => {
+        objectStore.add(image);
+      });
+      await new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => {
+          resolve();
+        };
+        transaction.onerror = (event: Event) => {
+          console.error('Error al guardar las imágenes:', transaction.error);
+          reject(transaction.error);
+        };
+      });
+    } catch (error) {
+      console.error('Error al guardar las imágenes en IndexedDB:', error);
+      throw error;
+    }
+  };
+
+  const getImagesFromIndexedDB = async (db: IDBDatabase, groupName: string) => {
+    console.log("Nombre del almacén:", groupName); // Agregar este registro de consola
+    if (!db.objectStoreNames.contains(groupName)) {
+        console.error('El almacén de objetos', groupName, 'no existe en la base de datos.');
+        return [];
+    }
     return new Promise<File[]>((resolve, reject) => {
-      const request = window.indexedDB.open('ImageDatabase', 2); // Cambiar la versión de la base de datos
-      request.onerror = (event: Event) => {
-        console.error('Error al abrir la base de datos:', (event.target as IDBOpenDBRequest).error);
-        reject((event.target as IDBOpenDBRequest).error);
-      };
-      request.onupgradeneeded = (event) => {
-        console.log('onupgradeneeded event triggered');
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains('images')) {
-          console.log('Creating object store: images');
-          db.createObjectStore('images', { autoIncrement: true });
-        } else {
-          console.log('Object store "images" already exists');
-        }
-      };
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction('images', 'readonly');
-        const objectStore = transaction.objectStore('images');
+        const transaction = db.transaction(groupName, 'readonly');
+        const objectStore = transaction.objectStore(groupName);
         const getRequest = objectStore.getAll();
         getRequest.onerror = (event: Event) => {
-          console.error('Error al obtener las imágenes:', (event.target as IDBRequest).error);
-          reject((event.target as IDBRequest).error);
+            console.error('Error al obtener las imágenes:', (event.target as IDBRequest).error);
+            reject((event.target as IDBRequest).error);
         };
         getRequest.onsuccess = async (event: Event) => {
-          const result = (event.target as IDBRequest).result;
-          if (result) {
-            const resizedImages: File[] = [];
-            for (const imageFile of result) {
-              const resizedImageBlob = await resizeImageToA4(imageFile);
-              const resizedImageFile = new File([resizedImageBlob], imageFile.name, { type: imageFile.type });
-              resizedImages.push(resizedImageFile);
+            const result = (event.target as IDBRequest).result;
+            if (result) {
+                const resizedImages: File[] = [];
+                for (const imageFile of result) {
+                    const resizedImageBlob = await resizeImageToA4(imageFile);
+                    const resizedImageFile = new File([resizedImageBlob], imageFile.name, { type: imageFile.type });
+                    resizedImages.push(resizedImageFile);
+                }
+                resolve(resizedImages);
+            } else {
+                console.error('Error al obtener las imágenes: result es null');
+                reject(new Error('Result es null'));
             }
-            resolve(resizedImages);
-          } else {
-            console.error('Error al obtener las imágenes: result es null');
-            reject(new Error('Result es null'));
-          }
-          db.close();
         };
-      };
     });
   };
 
@@ -156,28 +130,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
     setCurrentIndex(index);
     setLongTexts(longTexts);
     setSelectedExcelData(excelData);
-    //loadExcelData()
   };
 
   const cargarDatosExcel = async (): Promise<ExcelData> => {
     try {
-      // Lógica para cargar los datos del archivo Excel
       return Promise.resolve({ actividadAcademica: 'Academica', fechaInicio: 'Inicio', nombres: ['Nombre1', 'Nombre2'] });
     } catch (error) {
       console.error('Error al cargar los datos del archivo Excel:', error);
-      throw error; // Lanzar el error para que sea manejado externamente
+      throw error;
     }
   };
-  
-  /* const loadExcelData = async () => {
-    try {
-      // Aquí cargarías los datos del archivo Excel y los asignarías a selectedExcelData
-      const excelData = await cargarDatosExcel(); // Pseudocódigo para cargar los datos del archivo Excel
-      setSelectedExcelData(excelData);
-    } catch (error) {
-      console.error('Error al cargar los datos del archivo Excel:', error);
-    }
-  }; */
 
   const closeModal = () => {
     setModalImageUrl("");
@@ -200,15 +162,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
       case 1:
         return 'cimade';
       case 2:
-        return 'sayan';
-      case 3:
-        return 'binex';
-      case 4:
         return 'ecomas';
-      case 5:
+      case 3:
         return 'promas';
-      default:
+      case 4:
+        return 'binex';
+      case 5:
         return 'rizo';
+      default:
+        return 'sayan';
     }
   };
 
@@ -230,26 +192,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
   };
 
   const deleteAllImagesFromIndexedDB = async () => {
-    return new Promise<void>((resolve, reject) => {
-      const request = window.indexedDB.open('ImageDatabase', 2);
-      request.onerror = (event) => {
-        console.error('Error al abrir la base de datos:', request.error);
-        reject(request.error);
+    try {
+      const db = await getDatabaseConnection(); // Obtener la instancia de la base de datos
+      const transaction = db.transaction(['images'], 'readwrite');
+      const objectStore = transaction.objectStore('images');
+      const clearRequest = objectStore.clear();
+      clearRequest.onsuccess = () => {
+        console.log('Todas las imágenes eliminadas correctamente.');
       };
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(['images'], 'readwrite');
-        const objectStore = transaction.objectStore('images');
-        const clearRequest = objectStore.clear();
-        clearRequest.onsuccess = () => {
-          resolve();
-        };
-        clearRequest.onerror = (event) => {
-          console.error('Error al eliminar las imágenes:', clearRequest.error);
-          reject(clearRequest.error);
-        };
+      clearRequest.onerror = (event) => {
+        console.error('Error al eliminar las imágenes:', clearRequest.error);
       };
-    });
+    } catch (error) {
+      console.error('Error al abrir la base de datos:', error);
+    }
   };
 
   const handleDeleteImages = async () => {
@@ -266,14 +222,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
     const excelData = await cargarDatosExcel(); // Elimina los argumentos si no son necesarios
     setSelectedExcelData(excelData);
   };
-  
+
   return (
     <div>
       <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes ({numModules})</h1>
       <div className='image-container relative mb-10'>
         <input type='file' accept="image/*" onChange={handleImageFileChange} multiple className='bg-red-600/50'/>
       </div>
-      {storedImages.slice(0, numModules).map((file, index) => (
+      {storedImages.slice(numModules).map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
             <div className='bg-red-600/35 p-2 w-80 rounded-lg'>

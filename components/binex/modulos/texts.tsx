@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 interface ImageModalContentProps {
-  
     numModules: number;
     excelData: { actividadAcademica: string | null; fechaInicio: string | null; nombres: string[] } | null;
     longTexts: { text: string; style: string }[];

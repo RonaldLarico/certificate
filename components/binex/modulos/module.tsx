@@ -1,4 +1,3 @@
-
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
@@ -111,7 +110,7 @@ const Module = () => {
         <div className='text-gray-500 items-center'>
           <div className='relative'>
             <select {...{ required: true }} name='country' className="bg-gray-100 border-2 border-gray-300 text-gray-600 text-3xl rounded-lg ps-5 p-1 font-bold" onChange={handleModuleChange}>
-              {[...Array(13)].map((_, index) => (
+              {[...Array(15)].map((_, index) => (
                 <option key={index} value={index + 1}>{String(index + 1).padStart(2, '0')}</option>
               ))}
             </select>
