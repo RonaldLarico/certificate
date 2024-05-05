@@ -1,4 +1,4 @@
-// Establecer una variable global para almacenar la conexión a la base de datos
+/* // Establecer una variable global para almacenar la conexión a la base de datos
 let dbConnection: IDBDatabase | null = null;
 
 // Función para abrir la conexión a la base de datos
@@ -60,4 +60,4 @@ export const closeDatabaseConnection = () => {
     dbConnection.close();
     dbConnection = null;
   }
-};
+}; */

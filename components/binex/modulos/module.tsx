@@ -10,14 +10,20 @@ interface ExcelData {
   nombres: string[];
 }
 
+interface ImageAndExcel {
+  imageId: number | null;
+  image: File | null;
+  excelData: ExcelData | null;
+}
+
 const Module = () => {
   const [numModules, setNumModules] = useState(1);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
-  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; excelData:ExcelData | null }[]>([]);
+  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
-  const [showModal, setShowModal] = useState<boolean>(false);
+  const [excelLoaded, setExcelLoaded] = useState<boolean>(false);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -32,15 +38,12 @@ const Module = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
-      const updatedImageAndExcel = await Promise.all(newExcelFiles.map(async (file) => {
-        return {
-          image: null,
-          excelData: await extractExcelData(file)
-        };
+      const updatedImagesAndExcel = newExcelFiles.map((_, index) => ({
+        imageId: index < imageFiles.length ? index : null,
+        image: index < imageFiles.length ? imageFiles[index] : null,
+        excelData: null,
       }));
-      console.log("Datos de archivos Excel extraídos:", updatedImageAndExcel);
-      setImagesAndExcel(updatedImageAndExcel);
-      //setShowModal(true);
+      setImagesAndExcel(updatedImagesAndExcel);
     }
   };
 
@@ -67,30 +70,29 @@ const Module = () => {
   };
 
   useEffect(() => {
-    const updateImagesAndExcel = async () => {
-      const updatedImagesAndExcel = await Promise.all(excelFiles.map(async (file, index) => {
-        return {
-          image: imageFiles[index],
-          excelData: await extractExcelData(file)
-        };
-      }));
+    const updateImagesAndExcel = async () => { // Marcar la función como async
+      const updatedImagesAndExcel = await Promise.all(excelFiles.map(async (file, index) => ({
+        imageId: index < imageFiles.length ? index : null,
+        image: index < imageFiles.length ? imageFiles[index] : null,
+        excelData: await extractExcelData(file),
+      })));
       setImagesAndExcel(updatedImagesAndExcel);
     };
-
     if (excelFiles.length > 0) {
       updateImagesAndExcel();
     }
   }, [excelFiles, imageFiles]);
 
-  useEffect(() => {
+ /*  useEffect(() => {
     // Aquí puedes realizar la lógica para modificar las imágenes según los datos del archivo Excel
     // Por ejemplo, puedes usar excelData para modificar las imágenes según alguna regla específica
-  }, [excelData]);
+  }, [excelData]); */
 
   const clearFiles = () => {
     setImageFiles([]);
     setExcelFiles(Array(numModules).fill(null));
     setImagesAndExcel([]);
+    //setExcelLoaded(false);
     setShowViewButton(false);
   };
 
@@ -118,24 +120,21 @@ const Module = () => {
         </div>
 
       </div>
-      {showModal && imagesAndExcel.map(({ image, excelData }, index) => (
-        <div key={index} className=''>
-          <ImageModalContent
-            numModules={numModules}
-            longTexts={longTexts}
-            excelData={excelData}
-            actividadAcademica={excelData?.actividadAcademica || null}
-            fechaInicio={excelData?.fechaInicio || null}
-            nombres={excelData?.nombres || []}
-          />
-        </div>
-      ))}
       <div className='grid grid-cols-2 ml-40'>
         <div className=''>
           <div className='image-container relative mb-20'>
           </div>
-            <ImageUploader numModules={numModules} onImageUpload={(files) => setShowViewButton(true)} excelData={excelData} />
-            <p className=''>Archivos de imagenes mostrados: {numModules}</p>
+          {imagesAndExcel.map(({ image, excelData }, index) => (
+            <div key={index} className=''>
+              <ImageUploader
+                numModules={numModules}
+                onImageUpload={(files) => setShowViewButton(true)}
+                excelData={excelData}
+              />
+              <p className=''>Archivos de imagenes mostrados: {numModules}</p>
+            </div>
+          ))}
+
           </div>
         <div className='mt-20'>
           <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel</h1>
