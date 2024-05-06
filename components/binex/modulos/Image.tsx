@@ -24,6 +24,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
   const [longTexts, setLongTexts] = useState<{ text: string; style: string }[]>([]);
   const [selectedExcelData, setSelectedExcelData] = useState<ExcelData | null>(null);
   const [nextImageId, setNextImageId] = useState<number>(0);
+  const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: string | null; excelData: ExcelData | null; }[]>([]);
+
+
 
   useEffect(() => {
     const createDatabaseAndObjectStore = async () => {
@@ -69,6 +72,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
         const db = await openDatabase();
         await saveImageGroupToIndexedDB(db, newImageFiles);
         const images = await getImagesFromIndexedDB(db);
+        const updatedImagesAndExcel = images.map((image, index) => ({
+          imageId: image.name,
+          image: image,
+          excelData: excelData && excelData.actividadAcademica && excelData.fechaInicio && excelData.nombres
+    ? excelData
+    : null,
+        }));
+        setImagesAndExcel(updatedImagesAndExcel);
         setStoredImages(images);
         setNextImageId(0);
       } catch (error) {

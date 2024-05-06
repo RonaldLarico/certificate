@@ -23,7 +23,6 @@ const Module = () => {
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [showViewButton, setShowViewButton] = useState<boolean>(false);
-  const [excelLoaded, setExcelLoaded] = useState<boolean>(false);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -38,11 +37,14 @@ const Module = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
-      const updatedImagesAndExcel = newExcelFiles.map((_, index) => ({
-        imageId: index < imageFiles.length ? index : null,
+      const updatedImagesAndExcel = newExcelFiles.map((file, index) => {
+        console.log(`Excel file ${file.name} is related to imageId ${index}`);
+        return {
+        imageId: index,
         image: index < imageFiles.length ? imageFiles[index] : null,
         excelData: null,
-      }));
+        }
+      });
       setImagesAndExcel(updatedImagesAndExcel);
     }
   };
@@ -83,11 +85,6 @@ const Module = () => {
     }
   }, [excelFiles, imageFiles]);
 
- /*  useEffect(() => {
-    // Aquí puedes realizar la lógica para modificar las imágenes según los datos del archivo Excel
-    // Por ejemplo, puedes usar excelData para modificar las imágenes según alguna regla específica
-  }, [excelData]); */
-
   const clearFiles = () => {
     setImageFiles([]);
     setExcelFiles(Array(numModules).fill(null));
@@ -124,20 +121,19 @@ const Module = () => {
         <div className=''>
           <div className='image-container relative mb-20'>
           </div>
-          {imagesAndExcel.map(({ image, excelData }, index) => (
-            <div key={index} className=''>
+          {imagesAndExcel.length > 0 && (
+            <div>
               <ImageUploader
                 numModules={numModules}
                 onImageUpload={(files) => setShowViewButton(true)}
-                excelData={excelData}
+                excelData={imagesAndExcel[0].excelData}
               />
               <p className=''>Archivos de imagenes mostrados: {numModules}</p>
             </div>
-          ))}
-
+          )}
           </div>
         <div className='mt-20'>
-          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel</h1>
+          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel ({numModules})</h1>
           <div className='relative mb-10'>
           <input type="file" accept=".xlsx, .xls" onChange={handleExcelFileChange} multiple
             className='bg-green-600/50' />
