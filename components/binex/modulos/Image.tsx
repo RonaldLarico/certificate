@@ -1,17 +1,22 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import Modal from '@/components/share/Modal'; // Importa el componente Modal
+import Modal from '@/components/share/Modal';
 import ImageModalContent from './texts';
-//import { getDatabaseConnection } from '../database/index';
 
 interface ExcelData {
+  nombres: string[];
+  email: string[];
+  codigo: string[];
+  participacion: string[];
   actividadAcademica: string | null;
   fechaInicio: string | null;
-  nombres: string[];
+  fechaFinal: string | null;
+  temario: string | null;
+  ponente: string | null;
+  horas: string | null;
 }
 
 interface ImageUploaderProps {
   numModules: number;
-  //onImageUpload: (files: File[]) => void;
   excelData: ExcelData[] | null;
 }
 
@@ -231,9 +236,10 @@ return (
         )}
         <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p>
         <button onClick={() => handleVerClick(index)} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
-        {imageTexts[index] && <p className="absolute top-0 left-0 text-white bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
+        {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
       </div>
     ))}
+    <p className=''>Archivos de imagenes mostrados: {numModules}</p>
     <button onClick={handleDeleteImages} className="bg-red-600 text-white p-2 rounded-md mb-4">Eliminar todas las imágenes</button>
     {modalImageUrl && (
       <Modal onClose={closeModal}>
@@ -245,9 +251,6 @@ return (
                 numModules={numModules}
                 longTexts={longTexts}
                 excelData={Array.isArray(selectedExcelData) ? selectedExcelData : [selectedExcelData]}
-                actividadAcademica={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).actividadAcademica || null}
-                fechaInicio={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).fechaInicio || null}
-                nombres={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).nombres || []}
               />
             )}
           <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4">&gt;</button>

@@ -4,15 +4,19 @@ interface ImageModalContentProps {
     numModules: number;
     excelData: ExcelData[];
     longTexts: { text: string; style: string }[];
-    actividadAcademica: string | null;
-    fechaInicio: string | null;
-    nombres: string[];
 }
 
 interface ExcelData {
+  nombres: string[];
+  email: string[];
+  codigo: string[];
+  participacion: string[];
   actividadAcademica: string | null;
   fechaInicio: string | null;
-  nombres: string[];
+  fechaFinal: string | null;
+  temario: string | null;
+  ponente: string | null;
+  horas: string | null;
 }
 
 const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalContentProps) => {
@@ -34,14 +38,35 @@ const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalConten
         </div>
       ))}
         {excelData && excelData.map((data, dataIndex) => (
-        <div key={dataIndex}>
-          <div className="absolute top-96 left-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
-            Actividad académica: {data.actividadAcademica}
+        <div key={dataIndex} className='grid grid-cols-2'>
+
+          <div className='col-span-1'>
+          <div className="absolute top-[205px] left-[115px] text-xs font-bold text-gray-200">
+            {data.ponente}
           </div>
-          <div className="absolute top-80 right-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
-            Fecha Inicio: {data.fechaInicio}
+          <div className="absolute top-[280px] left-[115px] text-xs font-bold text-gray-200">
+            {data.temario}
           </div>
-          <div className="absolute top-80 left-0 h-full w-full flex flex-col items-start">
+          <div className="absolute top-[635px] left-40 h-full w-full flex flex-col items-start">
+            <div className="p-2 bg-black bg-opacity-75 rounded-md mb-2 text-white">
+              <p><strong>Codigo:</strong></p>
+              <ul>
+                {data.codigo.map((codigo, index) => (
+                  <li key={index}>{codigo}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          </div>
+
+          <div className='col-span-1'>
+          <div className="absolute top-[377px] left-[425px] text-xl font-bold text-gray-800">
+            {data.actividadAcademica}
+          </div>
+          <div className="absolute top-[500px] right-0 text-xl font-bold text-gray-800">
+            Curso-taller organizado por ECOMÁS Consultoria y Capacitaciones, llevado a cabo desde el {data.fechaInicio} al {data.fechaInicio} de 2024 con una duracion de 20 horas académicas.
+          </div>
+          <div className="absolute top-[280px] left-[600px] h-full w-full flex flex-col items-start">
             <div className="p-2 bg-black bg-opacity-75 rounded-md mb-2 text-white">
               <p><strong>Nombres:</strong></p>
               <ul>
@@ -50,12 +75,11 @@ const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalConten
                 ))}
               </ul>
             </div>
+            </div>
           </div>
+
         </div>
       ))}
-      </div>
-      <div className="absolute top-10 left-10 text-white text-lg font-bold bg-black bg-opacity-75 p-2 rounded-md">
-        Tu texto aquí
       </div>
     </>
   );

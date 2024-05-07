@@ -4,9 +4,16 @@ import * as XLSX from 'xlsx';
 import ImageUploader from './Image';
 
 interface ExcelData {
+  nombres: string[];
+  email: string[];
+  codigo: string[];
+  participacion: string[];
   actividadAcademica: string | null;
   fechaInicio: string | null;
-  nombres: string[];
+  fechaFinal: string | null;
+  temario: string | null;
+  ponente: string | null;
+  horas: string | null;
 }
 
 const Module = () => {
@@ -52,10 +59,17 @@ const Module = () => {
         const sheet = workbook.Sheets[sheetName];
         const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
         const filteredData = sheetData.filter((row) => row.length > 0 && row.some((cell) => typeof cell === 'string' && cell.trim() !== ''));
-        const nombres = filteredData.slice(11).map((row: string[]) => row[0]);
+        const nombres = filteredData.slice(9).map((row: string[]) => row[0]);
+        const email = filteredData.slice(9).map((row: string[]) => row[2]);
+        const codigo = filteredData.slice(9).map((row: string[]) => row[8]);
+        const participacion = filteredData.slice(9).map((row: string[]) => row[9]);
         const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
         const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
-        resolve({ actividadAcademica, fechaInicio, nombres });
+        const fechaFinal = sheet['B3'] ? sheet['B3'].v : null;
+        const temario = sheet['B4'] ? sheet['B4'].v : null;
+        const ponente = sheet['B5'] ? sheet['B5'].v : null;
+        const horas = sheet['B6'] ? sheet['B6'].v : null;
+        resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas});
       };
       reader.onerror = (error) => {
         reject(error);
@@ -119,21 +133,20 @@ const Module = () => {
                 numModules={numModules}
                 excelData={imagesAndExcel.map(item => item.excelData).filter(excelData => excelData !== null) as ExcelData[]}
               />
-              <p className=''>Archivos de imagenes mostrados: {numModules}</p>
             </div>
           )}
           </div>
         <div className='mt-20'>
           <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel ({numModules})</h1>
           <div className='relative mb-10'>
-          <input type="file" accept=".xlsx, xlsm, .xls" onChange={handleExcelFileChange} multiple
+          <input type="file" accept=".xlsx, .xlsm, .xls" onChange={handleExcelFileChange} multiple
             className='bg-green-600/50' />
           </div>
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
               {file && (
                 <div className='inline-flex'>
-                  <p className='w-80 p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
+                  <p className='w-auto p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>
