@@ -2,18 +2,11 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ImageUploader from './Image';
-import ImageModalContent from './texts';
 
 interface ExcelData {
   actividadAcademica: string | null;
   fechaInicio: string | null;
   nombres: string[];
-}
-
-interface ImageAndExcel {
-  imageId: number | null;
-  image: File | null;
-  excelData: ExcelData | null;
 }
 
 const Module = () => {
@@ -72,7 +65,7 @@ const Module = () => {
   };
 
   useEffect(() => {
-    const updateImagesAndExcel = async () => { // Marcar la función como async
+    const updateImagesAndExcel = async () => {
       const updatedImagesAndExcel = await Promise.all(excelFiles.map(async (file, index) => ({
         imageId: index < imageFiles.length ? index : null,
         image: index < imageFiles.length ? imageFiles[index] : null,
@@ -89,7 +82,6 @@ const Module = () => {
     setImageFiles([]);
     setExcelFiles(Array(numModules).fill(null));
     setImagesAndExcel([]);
-    //setExcelLoaded(false);
     setShowViewButton(false);
   };
 
@@ -125,8 +117,7 @@ const Module = () => {
             <div>
               <ImageUploader
                 numModules={numModules}
-                onImageUpload={(files) => setShowViewButton(true)}
-                excelData={imagesAndExcel[0].excelData}
+                excelData={imagesAndExcel.map(item => item.excelData).filter(excelData => excelData !== null) as ExcelData[]}
               />
               <p className=''>Archivos de imagenes mostrados: {numModules}</p>
             </div>
@@ -135,7 +126,7 @@ const Module = () => {
         <div className='mt-20'>
           <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel ({numModules})</h1>
           <div className='relative mb-10'>
-          <input type="file" accept=".xlsx, .xls" onChange={handleExcelFileChange} multiple
+          <input type="file" accept=".xlsx, xlsm, .xls" onChange={handleExcelFileChange} multiple
             className='bg-green-600/50' />
           </div>
           {excelFiles.map((file, index) => (
@@ -150,7 +141,7 @@ const Module = () => {
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
         </div>
       </div>
-      <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button>
+      {/* <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button> */}
     </section>
   );
 };

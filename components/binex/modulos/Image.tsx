@@ -11,11 +11,11 @@ interface ExcelData {
 
 interface ImageUploaderProps {
   numModules: number;
-  onImageUpload: (files: File[]) => void;
-  excelData: ExcelData | null;
+  //onImageUpload: (files: File[]) => void;
+  excelData: ExcelData[] | null;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload, excelData }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [modalImageUrl, setModalImageUrl] = useState<string>("");
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -75,9 +75,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
         const updatedImagesAndExcel = images.map((image, index) => ({
           imageId: image.name,
           image: image,
-          excelData: excelData && excelData.actividadAcademica && excelData.fechaInicio && excelData.nombres
-    ? excelData
-    : null,
+          excelData: excelData && excelData[index] && excelData[index].actividadAcademica && excelData[index].fechaInicio && excelData[index].nombres
+          ? excelData[index]
+          : null,
         }));
         setImagesAndExcel(updatedImagesAndExcel);
         setStoredImages(images);
@@ -112,7 +112,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
 
   const getImagesFromIndexedDB = async (db: IDBDatabase) => {
     if (!db.objectStoreNames.contains('ecomas')) {
-        console.error('El almacén de objetos "images" no existe en la base de datos.');
+        console.error('El almacén de objetos "ecomas" no existe en la base de datos.');
         return [];
     }
     return new Promise<File[]>((resolve, reject) => {
@@ -145,7 +145,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
     setModalImageUrl(imageUrl);
     setCurrentIndex(index);
     setLongTexts(longTexts);
-    setSelectedExcelData(excelData);
+    excelData && setSelectedExcelData(excelData[index]);
   };
 
   const closeModal = () => {
@@ -168,12 +168,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d')!;
-        canvas.width = 3508; // A4 width in pixels at 300dpi
-        canvas.height = 2480; // A4 height in pixels at 300dpi
+        canvas.width = 3508;
+        canvas.height = 2480;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob((blob) => {
           resolve(blob!);
-        }, image.type); // Mantener la extensión original de la imagen
+        }, image.type);
       };
       img.src = URL.createObjectURL(image);
     });
@@ -181,14 +181,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
 
   const handleDeleteImages = async () => {
     try {
-      const db = await openDatabase(); // Obtener la instancia de la base de datos
+      const db = await openDatabase();
       const transaction = db.transaction(['ecomas'], 'readwrite');
       const objectStore = transaction.objectStore('ecomas');
       const clearRequest = objectStore.clear();
       clearRequest.onsuccess = () => {
         console.log('Todas las imágenes eliminadas correctamente.');
-        setStoredImages([]); // Limpiar la lista de imágenes en el estado local
-        setNextImageId(0); // Restablecer el contador de ID de imagen a 0
+        setStoredImages([]);
+        setNextImageId(0);
       };
       clearRequest.onerror = (event) => {
         console.error('Error al eliminar las imágenes:', clearRequest.error);
@@ -204,8 +204,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
   };
 
   const getNumberFromFileName = (fileName: string): number => {
-    const match = fileName.match(/\d+/); // Extraer el número del nombre del archivo
-    return match ? parseInt(match[0]) : Infinity; // Si no se encuentra un número, se coloca al final
+    const match = fileName.match(/\d+/);
+    return match ? parseInt(match[0]) : Infinity;
   };
   // Ordenar las imágenes según los números en sus nombres
   const sortedImages = [...storedImages].sort((a, b) => {
@@ -213,7 +213,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, onImageUpload
     const numberB = getNumberFromFileName(b.name);
     return numberA - numberB;
   });
-
   // Obtener las imágenes a mostrar según el número de módulos seleccionado
   const imagesToShow = sortedImages.slice(0, numModules);
 
@@ -242,15 +241,15 @@ return (
           <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4">&lt;</button>
             <img src={modalImageUrl} alt="Preview" className="max-h-[21cm] max-w-[29.7cm]" style={{ width: '100%', height: 'auto' }} />
             {selectedExcelData && (
-        <ImageModalContent
-          numModules={numModules}
-          longTexts={longTexts}
-          excelData={selectedExcelData}
-          actividadAcademica={selectedExcelData.actividadAcademica || null}
-          fechaInicio={selectedExcelData.fechaInicio || null}
-          nombres={selectedExcelData.nombres || []}
-        />
-      )}
+              <ImageModalContent
+                numModules={numModules}
+                longTexts={longTexts}
+                excelData={Array.isArray(selectedExcelData) ? selectedExcelData : [selectedExcelData]}
+                actividadAcademica={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).actividadAcademica || null}
+                fechaInicio={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).fechaInicio || null}
+                nombres={(Array.isArray(selectedExcelData) ? selectedExcelData[0] : selectedExcelData).nombres || []}
+              />
+            )}
           <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4">&gt;</button>
         </div>
       </Modal>

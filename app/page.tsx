@@ -12,34 +12,16 @@ export default function Home() {
 
   return (
     <main>
-        <div className="grid grid-cols-2 mt-80">
-          <div className="flex justify-center ">
-            <div>
-            <Link href="/routes" onClick={() => handleGroupClick("Ecomas")}>
-              Ecomas
-            </Link>
-            </div>
-            <div>
-            <Link href="/routes" onClick={() => handleGroupClick("Binex")}>
-              Binex
-            </Link>
-            </div>
-            <Link href="/routes" onClick={() => handleGroupClick("Cimade")}>
-              Cimade
-            </Link>
-          </div>
-
-          <div className="flex justify-center">
-            <Link href="/" onClick={() => handleGroupClick("Promas")}>
-              Promas
-            </Link>
-            <Link href="/" onClick={() => handleGroupClick("Sayan")}>
-              Sayan
-            </Link>
-            <Link href="/" onClick={() => handleGroupClick("Rizo")}>
-              Rizo
-            </Link>
-          </div>
+        <div className="flex justify-center mt-60 gap-40">
+          <Link href="/" className="border p-4 rounded-xl">
+            Diplomados
+          </Link>
+          <Link href="/" className="border p-4 rounded-xl">
+            Cursos
+          </Link>
+          <Link href="/routesModules" className="border p-4 rounded-xl">
+            Módulos
+          </Link>
         </div>
     </main>
   );

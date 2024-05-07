@@ -2,11 +2,17 @@ import React, { useState, useEffect } from 'react';
 
 interface ImageModalContentProps {
     numModules: number;
-    excelData: { actividadAcademica: string | null; fechaInicio: string | null; nombres: string[] } | null;
+    excelData: ExcelData[];
     longTexts: { text: string; style: string }[];
     actividadAcademica: string | null;
     fechaInicio: string | null;
     nombres: string[];
+}
+
+interface ExcelData {
+  actividadAcademica: string | null;
+  fechaInicio: string | null;
+  nombres: string[];
 }
 
 const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalContentProps) => {
@@ -22,33 +28,31 @@ const ImageModalContent = ({ numModules, longTexts, excelData}: ImageModalConten
   return (
     <>
     <div className=''>
-
-        {longTexts && longTexts.map((text, index) => (
-          <div key={index} className={`absolute ${text && text.style}`}>
-            {text && text.text}
-          </div>
-        ))}
-
-        {excelData && (
-        <>
+      {longTexts && longTexts.map((text, index) => (
+        <div key={index} className={`absolute ${text && text.style}`}>
+          {text && text.text}
+        </div>
+      ))}
+        {excelData && excelData.map((data, dataIndex) => (
+        <div key={dataIndex}>
           <div className="absolute top-96 left-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
-            Actividad académica: {excelData.actividadAcademica}
+            Actividad académica: {data.actividadAcademica}
           </div>
           <div className="absolute top-80 right-0 m-4 px-4 py-1 text-xl font-bold text-white bg-black bg-opacity-75 rounded-xl">
-            Fecha Inicio: {excelData.fechaInicio}
+            Fecha Inicio: {data.fechaInicio}
           </div>
           <div className="absolute top-80 left-0 h-full w-full flex flex-col items-start">
-            <div className="p-2 bg-black bg-opacity-75 rounded-md mb-2">
+            <div className="p-2 bg-black bg-opacity-75 rounded-md mb-2 text-white">
               <p><strong>Nombres:</strong></p>
               <ul>
-                {excelData.nombres.map((nombre, index) => (
+                {data.nombres.map((nombre, index) => (
                   <li key={index}>{nombre}</li>
                 ))}
               </ul>
             </div>
           </div>
-        </>
-      )}
+        </div>
+      ))}
       </div>
       <div className="absolute top-10 left-10 text-white text-lg font-bold bg-black bg-opacity-75 p-2 rounded-md">
         Tu texto aquí
