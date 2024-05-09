@@ -1,6 +1,5 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
 import Modal from '@/components/share/Modal';
-import ImageModalContent from './texts';
 
 interface ExcelData {
   nombres: string[];
@@ -26,18 +25,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [storedImages, setStoredImages] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
-  const [longTexts, setLongTexts] = useState<{ text: string; style: string }[]>([]);
   const [selectedExcelData, setSelectedExcelData] = useState<ExcelData | null>(null);
   const [nextImageId, setNextImageId] = useState<number>(0);
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: string | null; excelData: ExcelData | null; }[]>([]);
-
-
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const createDatabaseAndObjectStore = async () => {
       try {
         const db = await openDatabase();
         const images = await getImagesFromIndexedDB(db);
+        const updatedImagesAndExcel = images.map((image, index) => ({
+          imageId: image.name,
+          image: image,
+          excelData: excelData && excelData[index] ? excelData[index] : null,
+        }));
+        setImagesAndExcel(updatedImagesAndExcel);
         setStoredImages(images);
         setNextImageId(images.length);
       } catch (error) {
@@ -45,7 +48,67 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
       }
     };
     createDatabaseAndObjectStore();
-  }, []);
+  }, [excelData]);
+
+  useEffect(() => {
+    if (excelData && storedImages.length > 0) {
+      generateImagesWithText();
+    }
+  }, [excelData, storedImages]);
+
+  const generateImagesWithText = () => {
+    const updatedImagesAndExcel: { image: File | null; imageId: string | null; excelData: ExcelData | null; }[] = [];
+    storedImages.forEach((image, index) => {
+      const selectedData = excelData ? excelData[index] : null;
+      if (selectedData) {
+        selectedData.nombres.forEach((nombre, nombreIndex) => {
+          const newImageId = `${image.name}_${nombreIndex}`;
+          const newImage = new File([image], newImageId, { type: image.type });
+          updatedImagesAndExcel.push({
+            imageId: newImageId,
+            image: newImage,
+            excelData: { nombres: [nombre], email: [selectedData.email[nombreIndex]], codigo: [selectedData.codigo[nombreIndex]], participacion: [selectedData.participacion[nombreIndex]], actividadAcademica: selectedData.actividadAcademica, fechaInicio: selectedData.fechaInicio, fechaFinal: selectedData.fechaFinal, temario: selectedData.temario, ponente: selectedData.ponente, horas: selectedData.horas },
+          });
+        });
+      }
+    });
+    setImagesAndExcel(updatedImagesAndExcel);
+  };
+
+  useEffect(() => {
+    if (modalImageUrl && canvasRef.current && excelData) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const image = new Image();
+        image.src = modalImageUrl;
+        image.onload = () => {
+          canvas.width = image.width;
+          canvas.height = image.height;
+          ctx.drawImage(image, 0, 0);
+          const selectedData = excelData[currentIndex];
+          if (selectedData) {
+            const academy = `Academica ${selectedData.actividadAcademica}`
+            const nombre = `Nombre: ${selectedData.nombres[currentIndex]}`;
+            const codigo = `codigo; ${selectedData.codigo.join(', ')}`
+            ctx.font = '66px Arial';
+            ctx.fillStyle = 'red';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(nombre, canvas.width / 2, canvas.height / 2);
+            ctx.fillText(codigo, canvas.width / 2, canvas.height / 1.2);
+            ctx.fillText(academy, canvas.width / 2, canvas.height / 3);
+          }
+        };
+      }
+    }
+  }, [modalImageUrl, excelData, currentIndex]);
+
+  const createImageFile = (nombre: string, index: number): File => {
+    // Crear un nuevo archivo de imagen con el nombre
+    const imageFile = new File([], `${nombre}_${index}.png`, { type: 'image/png' });
+    return imageFile;
+  };
 
   const openDatabase = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
@@ -115,42 +178,35 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
     }
   };
 
-  const getImagesFromIndexedDB = async (db: IDBDatabase) => {
+  const getImagesFromIndexedDB = async (db: IDBDatabase): Promise<File[]> => {
     if (!db.objectStoreNames.contains('ecomas')) {
-        console.error('El almacén de objetos "ecomas" no existe en la base de datos.');
-        return [];
+      console.error('El almacén de objetos "ecomas" no existe en la base de datos.');
+      return [];
     }
     return new Promise<File[]>((resolve, reject) => {
-        const transaction = db.transaction('ecomas', 'readonly');
-        const objectStore = transaction.objectStore('ecomas');
-        const getRequest = objectStore.getAll();
-        getRequest.onerror = (event: Event) => {
-            console.error('Error al obtener las imágenes:', (event.target as IDBRequest).error);
-            reject((event.target as IDBRequest).error);
-        };
-        getRequest.onsuccess = async (event: Event) => {
-            const result = (event.target as IDBRequest).result;
-            if (result) {
-                const resizedImages: File[] = [];
-                for (const imageFile of result) {
-                    const resizedImageBlob = await resizeImageToA4(imageFile);
-                    const resizedImageFile = new File([resizedImageBlob], imageFile.name, { type: imageFile.type });
-                    resizedImages.push(resizedImageFile);
-                }
-                resolve(resizedImages);
-            } else {
-                console.error('Error al obtener las imágenes: result es null');
-                reject(new Error('Result es null'));
-            }
-        };
+      const transaction = db.transaction('ecomas', 'readonly');
+      const objectStore = transaction.objectStore('ecomas');
+      const getRequest = objectStore.getAll();
+      getRequest.onerror = (event: Event) => {
+        console.error('Error al obtener las imágenes:', (event.target as IDBRequest).error);
+        reject((event.target as IDBRequest).error);
+      };
+      getRequest.onsuccess = async (event: Event) => {
+        const result = (event.target as IDBRequest).result;
+        if (result) {
+          resolve(result);
+        } else {
+          console.error('Error al obtener las imágenes: result es null');
+          reject(new Error('Result es null'));
+        }
+      };
     });
   };
 
-  const openModal = (imageUrl: string, index: number, longTexts: { text: string; style: string }[]) => {
+  const openModal = (imageUrl: string, index: number) => {
     setModalImageUrl(imageUrl);
     setCurrentIndex(index);
-    setLongTexts(longTexts);
-    excelData && setSelectedExcelData(excelData[index]);
+    setModalImageUrl(URL.createObjectURL(storedImages[currentIndex]));
   };
 
   const closeModal = () => {
@@ -165,23 +221,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
     if (currentIndex < imageFiles.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
-  };
-
-  const resizeImageToA4 = (image: File): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
-        canvas.width = 3508;
-        canvas.height = 2480;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          resolve(blob!);
-        }, image.type);
-      };
-      img.src = URL.createObjectURL(image);
-    });
   };
 
   const handleDeleteImages = async () => {
@@ -205,7 +244,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
 
   const handleVerClick = async (index: number) => {
     const selectedImageFile = storedImages[index];
-    openModal(URL.createObjectURL(selectedImageFile), index, longTexts);
+    openModal(URL.createObjectURL(selectedImageFile), index);
   };
 
   const getNumberFromFileName = (fileName: string): number => {
@@ -242,20 +281,15 @@ return (
     <p className=''>Archivos de imagenes mostrados: {numModules}</p>
     <button onClick={handleDeleteImages} className="bg-red-600 text-white p-2 rounded-md mb-4">Eliminar todas las imágenes</button>
     {modalImageUrl && (
-      <Modal onClose={closeModal}>
-        <div className="flex items-center justify-center">
-          <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4">&lt;</button>
-            <img src={modalImageUrl} alt="Preview" className="max-h-[21cm] max-w-[29.7cm]" style={{ width: '100%', height: 'auto' }} />
-            {selectedExcelData && (
-              <ImageModalContent
-                numModules={numModules}
-                longTexts={longTexts}
-                excelData={Array.isArray(selectedExcelData) ? selectedExcelData : [selectedExcelData]}
-              />
-            )}
-          <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4">&gt;</button>
+    <Modal onClose={closeModal}>
+      <div className="flex items-center justify-center">
+        <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4">&lt;</button>
+        <div>
+        <canvas ref={canvasRef} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
         </div>
-      </Modal>
+        <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4">&gt;</button>
+      </div>
+    </Modal>
     )}
   </div>
 );
