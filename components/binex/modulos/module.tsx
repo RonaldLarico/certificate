@@ -22,7 +22,6 @@ const Module = () => {
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
-  const [showViewButton, setShowViewButton] = useState<boolean>(false);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -92,24 +91,11 @@ const Module = () => {
     }
   }, [excelFiles, imageFiles]);
 
-  const clearFiles = () => {
-    setImageFiles([]);
-    setExcelFiles(Array(numModules).fill(null));
-    setImagesAndExcel([]);
-    setShowViewButton(false);
-  };
-
-  const imageFilesCount = imageFiles.filter(file => file !== null).length;
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
-
-  const longTexts = [
-    { text: 'CERTIFICADO', style: 'top-64 left-56 text-black text-7xl font-extrabold' },
-    { text: 'Otorgado a:', style: 'top-[330px] left-[415px] text-[22px] font- text-gray-400' },
-  ];
 
   return (
     <section className=''>
-      <h1 className='mt-5 ml-5'>Módulares/Binex</h1>
+      <h1 className='mt-5 ml-5'>Módulares/Ecomás</h1>
       <div className='flex justify-center mt-10 gap-6'>
         <h1 className='text-3xl font-bold'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>

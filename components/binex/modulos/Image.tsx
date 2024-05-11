@@ -20,7 +20,7 @@ interface ImageUploaderProps {
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
   const [modalImageUrl, setModalImageUrl] = useState<string | null>("");
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [storedImages, setStoredImages] = useState<File[]>([]);
@@ -65,27 +65,41 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           const selectedData = excelData[currentIndex];
           if (selectedData) {
             // Multiplicar o clonar la imagen original por la cantidad de strings en el array 'codigo'
-            for (let i = 0; i < selectedData.nombres.length; i++) {
+            /* for (let i = 1; i < selectedData.nombres.length; i++) {
               ctx.drawImage(image, 0, image.height * (i + 1));
+              setExcelDataIndex(excelDataIndex + 1);
+            } */
+            const clonedImageUrl = canvas.toDataURL(); // Obtener la URL de la imagen clonada como base64
+            setClonedImageUrls((prevUrls) => [...prevUrls, clonedImageUrl]);
+            // Insertar encima de las imágenes clonadas los strings del array 'nombres'
+            console.log("holaaa",selectedData.nombres)
+            for (let i = 0; i < selectedData.nombres.length; i++) {
+              console.log("siiiiiiiii",i)
+              ctx.font = '70px Arial';
+              ctx.fillStyle = 'black';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(`${selectedData.nombres[i]}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2.5);
+              console.log(`Nombresssssss: ${selectedData.nombres[i]}`);
+              ctx.fillText(`${selectedData.actividadAcademica}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2);
+              const lineHeight = 100; // Ajusta el espacio entre líneas según sea necesario
+              const x = canvas.width / 1.5; // Posición horizontal centrada
+              const y = canvas.height * i + canvas.height / 1.7; // Posición vertical inicial
+              ctx.fillText("Curso-taller organizado por Ecomás Consultoria y Capacitaciones,", x, y);
+              ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal},`, x, y + lineHeight);
+              ctx.fillText("con una duración de 20 horas académicas", x, y + lineHeight * 2);
+              const fontSize = 45;
+              ctx.fillStyle = 'white';
+              ctx.font = `${fontSize}px Arial`;
+              ctx.fillText(`${selectedData.ponente}`, canvas.width / 6.6, canvas.height * i + canvas.height / 3.7);
+              const textYPx = 2130;
+              ctx.fillStyle = 'black';
+              ctx.fillText(`${selectedData.codigo[i]}`, canvas.width / 6.6, canvas.height * i + textYPx);
               console.log(`Imagen clonada: ${modalImageUrl}`);
               console.log(`Nombre: ${selectedData.nombres[i]}`);
               console.log(`Codigo: ${selectedData.codigo[i]}`);
               console.log(`Academica: ${selectedData.actividadAcademica}`);
-              setExcelDataIndex(excelDataIndex + 1);
-            }
-            const clonedImageUrl = canvas.toDataURL(); // Obtener la URL de la imagen clonada como base64
-            setClonedImageUrls((prevUrls) => [...prevUrls, clonedImageUrl]);
-            // Insertar encima de las imágenes clonadas los strings del array 'codigo'
-            for (let i = 0; i < selectedData.nombres.length; i++) {
-              ctx.font = '66px Arial';
-              ctx.fillStyle = 'red';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(`${selectedData.nombres[i]}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2.5);
-              ctx.fillText(`${selectedData.codigo[i]}`, canvas.width / 6.6, canvas.height * i + canvas.height / 1.2);
-              ctx.fillText(`${selectedData.actividadAcademica}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2);
-              ctx.fillText(`${selectedData.email[i]}`, canvas.width / 6.6, canvas.height * i + canvas.height / 1.5);
-              ctx.fillText(`${selectedData.fechaInicio}`, canvas.width / 1.5, canvas.height * i + canvas.height / 1.8);
+              console.log(`Nombre: ${selectedData.nombres.length}`);
             }
           }
         };
@@ -196,7 +210,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const closeModal = () => {
     setModalImageUrl("");
   };
-  
+
   const handleDeleteImages: () => Promise<void> = async () => {
     try {
       const db = await openDatabase();
@@ -215,8 +229,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
       console.error('Error al abrir la base de datos:', error);
     }
   };
-  
-  
+
   const getNumberFromFileName = (fileName: string): number => {
     const match = fileName.match(/\d+/);
     return match ? parseInt(match[0]) : Infinity;
@@ -271,11 +284,11 @@ return (
     {modalImageUrl && (
     <Modal onClose={closeModal}>
       <div className="flex items-center justify-center">
-        <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4">&lt;</button>
+        <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4 text-3xl">&lt;</button>
         <div>
         <canvas ref={canvasRef} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
         </div>
-        <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4">&gt;</button>
+        <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4 text-3xl">&gt;</button>
       </div>
     </Modal>
     )}
