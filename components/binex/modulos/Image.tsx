@@ -21,14 +21,15 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [modalImageUrl, setModalImageUrl] = useState<string>("");
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>("");
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [storedImages, setStoredImages] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
-  const [selectedExcelData, setSelectedExcelData] = useState<ExcelData | null>(null);
   const [nextImageId, setNextImageId] = useState<number>(0);
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: string | null; excelData: ExcelData | null; }[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [clonedImageUrls, setClonedImageUrls] = useState<string[]>([]);
+  const [excelDataIndex, setExcelDataIndex] = useState(0);
 
   useEffect(() => {
     const createDatabaseAndObjectStore = async () => {
@@ -51,31 +52,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   }, [excelData]);
 
   useEffect(() => {
-    if (excelData && storedImages.length > 0) {
-      generateImagesWithText();
-    }
-  }, [excelData, storedImages]);
-
-  const generateImagesWithText = () => {
-    const updatedImagesAndExcel: { image: File | null; imageId: string | null; excelData: ExcelData | null; }[] = [];
-    storedImages.forEach((image, index) => {
-      const selectedData = excelData ? excelData[index] : null;
-      if (selectedData) {
-        selectedData.nombres.forEach((nombre, nombreIndex) => {
-          const newImageId = `${image.name}_${nombreIndex}`;
-          const newImage = new File([image], newImageId, { type: image.type });
-          updatedImagesAndExcel.push({
-            imageId: newImageId,
-            image: newImage,
-            excelData: { nombres: [nombre], email: [selectedData.email[nombreIndex]], codigo: [selectedData.codigo[nombreIndex]], participacion: [selectedData.participacion[nombreIndex]], actividadAcademica: selectedData.actividadAcademica, fechaInicio: selectedData.fechaInicio, fechaFinal: selectedData.fechaFinal, temario: selectedData.temario, ponente: selectedData.ponente, horas: selectedData.horas },
-          });
-        });
-      }
-    });
-    setImagesAndExcel(updatedImagesAndExcel);
-  };
-
-  useEffect(() => {
     if (modalImageUrl && canvasRef.current && excelData) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
@@ -88,27 +64,35 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           ctx.drawImage(image, 0, 0);
           const selectedData = excelData[currentIndex];
           if (selectedData) {
-            const academy = `Academica ${selectedData.actividadAcademica}`
-            const nombre = `Nombre: ${selectedData.nombres[currentIndex]}`;
-            const codigo = `codigo; ${selectedData.codigo.join(', ')}`
-            ctx.font = '66px Arial';
-            ctx.fillStyle = 'red';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(nombre, canvas.width / 2, canvas.height / 2);
-            ctx.fillText(codigo, canvas.width / 2, canvas.height / 1.2);
-            ctx.fillText(academy, canvas.width / 2, canvas.height / 3);
+            // Multiplicar o clonar la imagen original por la cantidad de strings en el array 'codigo'
+            for (let i = 0; i < selectedData.nombres.length; i++) {
+              ctx.drawImage(image, 0, image.height * (i + 1));
+              console.log(`Imagen clonada: ${modalImageUrl}`);
+              console.log(`Nombre: ${selectedData.nombres[i]}`);
+              console.log(`Codigo: ${selectedData.codigo[i]}`);
+              console.log(`Academica: ${selectedData.actividadAcademica}`);
+              setExcelDataIndex(excelDataIndex + 1);
+            }
+            const clonedImageUrl = canvas.toDataURL(); // Obtener la URL de la imagen clonada como base64
+            setClonedImageUrls((prevUrls) => [...prevUrls, clonedImageUrl]);
+            // Insertar encima de las imágenes clonadas los strings del array 'codigo'
+            for (let i = 0; i < selectedData.nombres.length; i++) {
+              ctx.font = '66px Arial';
+              ctx.fillStyle = 'red';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(`${selectedData.nombres[i]}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2.5);
+              ctx.fillText(`${selectedData.codigo[i]}`, canvas.width / 6.6, canvas.height * i + canvas.height / 1.2);
+              ctx.fillText(`${selectedData.actividadAcademica}`, canvas.width / 1.5, canvas.height * i + canvas.height / 2);
+              ctx.fillText(`${selectedData.email[i]}`, canvas.width / 6.6, canvas.height * i + canvas.height / 1.5);
+              ctx.fillText(`${selectedData.fechaInicio}`, canvas.width / 1.5, canvas.height * i + canvas.height / 1.8);
+            }
           }
         };
       }
     }
   }, [modalImageUrl, excelData, currentIndex]);
 
-  const createImageFile = (nombre: string, index: number): File => {
-    // Crear un nuevo archivo de imagen con el nombre
-    const imageFile = new File([], `${nombre}_${index}.png`, { type: 'image/png' });
-    return imageFile;
-  };
 
   const openDatabase = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
@@ -212,18 +196,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const closeModal = () => {
     setModalImageUrl("");
   };
-  const handlePrevImage = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-  const handleNextImage = () => {
-    if (currentIndex < imageFiles.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
-
-  const handleDeleteImages = async () => {
+  
+  const handleDeleteImages: () => Promise<void> = async () => {
     try {
       const db = await openDatabase();
       const transaction = db.transaction(['ecomas'], 'readwrite');
@@ -241,12 +215,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
       console.error('Error al abrir la base de datos:', error);
     }
   };
-
-  const handleVerClick = async (index: number) => {
-    const selectedImageFile = storedImages[index];
-    openModal(URL.createObjectURL(selectedImageFile), index);
-  };
-
+  
+  
   const getNumberFromFileName = (fileName: string): number => {
     const match = fileName.match(/\d+/);
     return match ? parseInt(match[0]) : Infinity;
@@ -259,6 +229,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   });
   // Obtener las imágenes a mostrar según el número de módulos seleccionado
   const imagesToShow = sortedImages.slice(0, numModules);
+  const handleVerClick = async (index: number) => {
+    const selectedImage = imagesAndExcel[index];
+    if (selectedImage.image) {
+      openModal(clonedImageUrls[index], index);
+    }
+  };
+
+  const handleNextImage = () => {
+    if (currentIndex < imagesAndExcel.length - 1 && imagesAndExcel[currentIndex + 1].image) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (currentIndex > 0 && imagesAndExcel[currentIndex - 1] && imagesAndExcel[currentIndex - 1].image) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
 
 return (
   <div>
@@ -274,7 +262,7 @@ return (
           </div>
         )}
         <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p>
-        <button onClick={() => handleVerClick(index)} className='mr-28 p-2 bg-purple-600 rounded-lg'>Ver</button>
+        <button onClick={() => handleVerClick(index)} className='mr-28 p-2 text-blue-700 rounded-lg underline'>Ver</button>
         {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
       </div>
     ))}
