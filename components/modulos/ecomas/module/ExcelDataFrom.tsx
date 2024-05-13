@@ -16,7 +16,7 @@ interface ExcelData {
   horas: string | null;
 }
 
-const Module = () => {
+const ExcelDataFrom = () => {
   const [numModules, setNumModules] = useState(1);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
@@ -145,4 +145,4 @@ const Module = () => {
   );
 };
 
-export default Module;
+export default ExcelDataFrom;

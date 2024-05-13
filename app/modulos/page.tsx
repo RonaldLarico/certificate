@@ -1,4 +1,4 @@
-import Module from '@/components/binex/modulos/module'
+import Module from '@/components/modulos/ecomas/module/ExcelDataFrom'
 import React from 'react'
 
 const Modules = () => {
