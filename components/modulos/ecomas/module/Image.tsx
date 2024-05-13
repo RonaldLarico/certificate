@@ -26,10 +26,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [clonedImageUrls, setClonedImageUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([])
   const [excelDataSet, setExcelDataSet] = useState<ExcelData[] | null>(null);
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -44,8 +42,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           canvas.height = image.height;
           ctx.drawImage(image, 0, 0);
           const selectedData = excelData[currentIndex];
-        if (selectedData) {
-          for (let i = 0; i < selectedData.nombres.length; i++) {
+          if (selectedData) {
+            for (let i = 0; i < selectedData.nombres.length; i++) {
               console.log("siiiiiiiii",i)
               const width = 2280
               const height = 1225
@@ -68,6 +66,48 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
               const textYPx = 2130;
               ctx.fillStyle = 'black';
               ctx.fillText(`${selectedData.codigo[i]}`, canvas.width / 6.6, canvas.height * i + textYPx);
+
+              ctx.fillStyle = 'white';
+              ctx.textAlign = 'left';
+              const fontSizeT = 35;
+              ctx.font = `${fontSizeT}px Arial`;
+              const drawTemario = (temario: string, ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number) => {
+                const lineHeight = 50;
+                const bulletIndent = 380; // Ajusta la sangría según sea necesario
+                const marginLeft = 0;
+                const viñetas = temario.split('\n').map(viñeta => viñeta.trim());
+                let nivel = 0;
+                let nivelAnterior = 0;
+                let posY = y
+                viñetas.forEach((viñeta, index) => {
+                  nivel = (viñeta.match(/^\*+/) || [""])[0].length;
+                  const sangria = (nivel - 1) * bulletIndent;
+                  const xPos = x + marginLeft + sangria;
+                  let text = viñeta.substring(nivel).trim();
+                  const words = text.split(' ');
+                  let line = '';
+                  words.forEach(word => {
+                    const testLine = line + word + ' ';
+                    const testWidth = ctx.measureText(testLine).width;
+                    if (testWidth > maxWidth) {
+                      ctx.fillText(line, xPos, posY);
+                      line = word;
+                      posY += lineHeight;
+                    } else {
+                      line = testLine;
+                    }
+                  });
+                  const mainTextWidth = ctx.measureText(viñeta.substring(0, nivel).trim()).width;
+                  const adjustedXPos = x + marginLeft + mainTextWidth;
+                  ctx.fillText(line, xPos, posY);
+                  posY += lineHeight;
+                  if (nivel < nivelAnterior) {
+                    nivelAnterior = nivel;
+                  }
+                });
+              };
+              const maxWidth = 800;
+              drawTemario(selectedData.temario || "", ctx, canvas.width / 6.6, canvas.height * i + canvas.height / 2.9, maxWidth);
               console.log(`Imagen clonada: ${modalImageUrl}`);
               console.log(`Nombre: ${selectedData.nombres[i]}`);
               console.log(`Codigo: ${selectedData.codigo[i]}`);
@@ -103,13 +143,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   }, []);
 
   useEffect(() => {
-    // Ordenar las imágenes según los números en sus nombres
     const sortedImages = [...imagesToShow].sort((a, b) => {
       const numberA = getNumberFromFileName(a.name);
       const numberB = getNumberFromFileName(b.name);
       return numberA - numberB;
     });
-    // Obtener las imágenes a mostrar según el número de módulos seleccionado
     const imagesToDisplay = sortedImages.slice(0, numModules);
     setImagesToShow(imagesToDisplay);
   }, [numModules]);
