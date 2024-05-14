@@ -26,9 +26,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [clonedImageUrls, setClonedImageUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([])
-  const [excelDataSet, setExcelDataSet] = useState<ExcelData[] | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -44,7 +42,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           canvas.height = image.height;
           ctx.drawImage(image, 0, 0);
           const selectedData = excelData[currentIndex];
-        if (selectedData) {
+        if (excelData && excelData[currentDataIndex] && Array.isArray(excelData[currentDataIndex].nombres) && Array.isArray(excelData[currentDataIndex].codigo)) {
           for (let i = 0; i < selectedData.nombres.length; i++) {
               console.log("siiiiiiiii",i)
               const width = 2280
@@ -53,8 +51,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
               ctx.fillStyle = 'black';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(`${selectedData.nombres[currentIndex]}`, width, canvas.height * i + canvas.height / 2.5);
-              console.log(`Nombresssssss: ${selectedData.nombres[i]}`);
+              const currentNombre = excelData[currentDataIndex].nombres[currentArrayIndex];
+              const currentCodigo = excelData[currentDataIndex].codigo[currentArrayIndex];
+              ctx.fillText(`${currentNombre}`, width, canvas.height * i + canvas.height / 2.5);
               ctx.fillText(`${selectedData.actividadAcademica}`, width, canvas.height * i + height);
               const lineHeight = 100; // Ajusta el espacio entre líneas según sea necesario
               const y = canvas.height * i + canvas.height / 1.7; // Posición vertical inicial
@@ -67,7 +66,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
               ctx.fillText(`${selectedData.ponente}`, canvas.width / 6.6, canvas.height * i + canvas.height / 3.7);
               const textYPx = 2130;
               ctx.fillStyle = 'black';
-              ctx.fillText(`${selectedData.codigo[i]}`, canvas.width / 6.6, canvas.height * i + textYPx);
+              ctx.fillText(`${currentCodigo}`, canvas.width / 6.6, canvas.height * i + textYPx);
 
               ctx.fillStyle = 'white';
               ctx.textAlign = 'left';
@@ -120,7 +119,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
         };
       }
     }
-  }, [modalImageUrl, excelData, currentIndex]);
+  }, [modalImageUrl, excelData]);
 
   useEffect(() => {
     const getStoredImages = async () => {
@@ -236,17 +235,23 @@ const getNumberFromFileName = (fileName: string): number => {
     setModalImageUrl(imageUrl);
     setCurrentIndex(index);
   };
-  const handleNextImage = () => {
-    if (currentIndex < (excelData?.length ?? 0) - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
 
-  const handlePrevImage = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+  const [currentDataIndex, setCurrentDataIndex] = useState<number>(0);
+  const [currentArrayIndex, setCurrentArrayIndex] = useState<number>(0);
+  const [selectedData, setSelectedData] = useState<ExcelData | null>(null);
+
+  const handleNextImage = () => {
+    if (excelData && excelData[currentDataIndex]) {
+      setCurrentArrayIndex((prevIndex) => (prevIndex + 1) % excelData[currentDataIndex].nombres.length);
     }
   };
+  
+  const handlePrevImage = () => {
+    if (excelData && excelData[currentDataIndex]) {
+      setCurrentArrayIndex((prevIndex) => (prevIndex - 1 + excelData[currentDataIndex].nombres.length) % excelData[currentDataIndex].nombres.length);
+    }
+  };
+  
 
   return (
     <div>
