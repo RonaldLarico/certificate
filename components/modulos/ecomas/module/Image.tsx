@@ -26,8 +26,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [clonedImageUrls, setClonedImageUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([])
   const [excelDataSet, setExcelDataSet] = useState<ExcelData[] | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -42,8 +44,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           canvas.height = image.height;
           ctx.drawImage(image, 0, 0);
           const selectedData = excelData[currentIndex];
-          if (selectedData) {
-            for (let i = 0; i < selectedData.nombres.length; i++) {
+        if (selectedData) {
+          for (let i = 0; i < selectedData.nombres.length; i++) {
               console.log("siiiiiiiii",i)
               const width = 2280
               const height = 1225
@@ -51,7 +53,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
               ctx.fillStyle = 'black';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(`${selectedData.nombres[i]}`, width, canvas.height * i + canvas.height / 2.5);
+              ctx.fillText(`${selectedData.nombres[currentIndex]}`, width, canvas.height * i + canvas.height / 2.5);
               console.log(`Nombresssssss: ${selectedData.nombres[i]}`);
               ctx.fillText(`${selectedData.actividadAcademica}`, width, canvas.height * i + height);
               const lineHeight = 100; // Ajusta el espacio entre líneas según sea necesario
@@ -143,11 +145,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   }, []);
 
   useEffect(() => {
+    // Ordenar las imágenes según los números en sus nombres
     const sortedImages = [...imagesToShow].sort((a, b) => {
       const numberA = getNumberFromFileName(a.name);
       const numberB = getNumberFromFileName(b.name);
       return numberA - numberB;
     });
+    // Obtener las imágenes a mostrar según el número de módulos seleccionado
     const imagesToDisplay = sortedImages.slice(0, numModules);
     setImagesToShow(imagesToDisplay);
   }, [numModules]);
@@ -233,26 +237,14 @@ const getNumberFromFileName = (fileName: string): number => {
     setCurrentIndex(index);
   };
   const handleNextImage = () => {
-    if (currentIndex < imagesToShow.length - 1) {
+    if (currentIndex < (excelData?.length ?? 0) - 1) {
       setCurrentIndex(currentIndex + 1);
-      setExcelDataSet((prevExcelData) => {
-        if (!prevExcelData) return prevExcelData;
-        const newData = [...prevExcelData];
-        newData[currentIndex] = { ...newData[currentIndex], nombres: [...newData[currentIndex].nombres], codigo: [...newData[currentIndex].codigo] }; // Copiar el objeto actual y sus arrays
-        return newData;
-      });
     }
   };
 
   const handlePrevImage = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
-      setExcelDataSet((prevExcelData) => {
-        if (!prevExcelData) return prevExcelData;
-        const newData = [...prevExcelData];
-        newData[currentIndex] = { ...newData[currentIndex], nombres: [...newData[currentIndex].nombres], codigo: [...newData[currentIndex].codigo] }; // Copiar el objeto actual y sus arrays
-        return newData;
-      });
     }
   };
 
