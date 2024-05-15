@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState, useContext } from 'react';
 import Modal from '@/components/share/Modal';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
 
@@ -27,7 +27,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [newImages, setNewImages] = useState<File[]>([])
-
+  const [currentDataIndex, setCurrentDataIndex] = useState<number>(0);
+  const [currentArrayIndex, setCurrentArrayIndex] = useState<number>(0);
+  const [numImagesDrawn, setNumImagesDrawn] = useState<number>(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           canvas.height = image.height;
           ctx.drawImage(image, 0, 0);
           const selectedData = excelData[currentIndex];
-        if (excelData && excelData[currentDataIndex] && Array.isArray(excelData[currentDataIndex].nombres) && Array.isArray(excelData[currentDataIndex].codigo)) {
+        if (selectedData && Array.isArray(selectedData.nombres) && Array.isArray(selectedData.codigo)) {
           for (let i = 0; i < selectedData.nombres.length; i++) {
               console.log("siiiiiiiii",i)
               const width = 2280
@@ -99,7 +101,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
                     }
                   });
                   const mainTextWidth = ctx.measureText(viñeta.substring(0, nivel).trim()).width;
-                  const adjustedXPos = x + marginLeft + mainTextWidth;
                   ctx.fillText(line, xPos, posY);
                   posY += lineHeight;
                   if (nivel < nivelAnterior) {
@@ -109,12 +110,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
               };
               const maxWidth = 800;
               drawTemario(selectedData.temario || "", ctx, canvas.width / 6.6, canvas.height * i + canvas.height / 2.9, maxWidth);
-              console.log(`Imagen clonada: ${modalImageUrl}`);
-              console.log(`Nombre: ${selectedData.nombres[i]}`);
-              console.log(`Codigo: ${selectedData.codigo[i]}`);
-              console.log(`Academica: ${selectedData.actividadAcademica}`);
-              console.log(`Nombre: ${selectedData.nombres.length}`);
             }
+            setNumImagesDrawn(selectedData.nombres.length);
           }
         };
       }
@@ -236,20 +233,109 @@ const getNumberFromFileName = (fileName: string): number => {
     setCurrentIndex(index);
   };
 
-  const [currentDataIndex, setCurrentDataIndex] = useState<number>(0);
-  const [currentArrayIndex, setCurrentArrayIndex] = useState<number>(0);
-  const [selectedData, setSelectedData] = useState<ExcelData | null>(null);
 
-  const handleNextImage = () => {
-    if (excelData && excelData[currentDataIndex]) {
-      setCurrentArrayIndex((prevIndex) => (prevIndex + 1) % excelData[currentDataIndex].nombres.length);
+  const handlePrevImage = () => {
+    if (excelData && excelData[currentDataIndex] && canvasRef.current) {
+      setCurrentArrayIndex((prevIndex) => {
+        const newIndex = (prevIndex - 1 + excelData[currentDataIndex].nombres.length) % excelData[currentDataIndex].nombres.length;
+        if (canvasRef.current) {
+          drawCanvas(canvasRef.current, excelData[currentIndex], newIndex);
+        }
+        return newIndex;
+      });
     }
   };
-  
-  const handlePrevImage = () => {
-    if (excelData && excelData[currentDataIndex]) {
-      setCurrentArrayIndex((prevIndex) => (prevIndex - 1 + excelData[currentDataIndex].nombres.length) % excelData[currentDataIndex].nombres.length);
+
+  const handleNextImage = () => {
+    if (excelData && excelData[currentDataIndex] && canvasRef.current) {
+      setCurrentArrayIndex((prevIndex) => {
+        const newIndex = (prevIndex + 1) % excelData[currentDataIndex].nombres.length;
+        if (canvasRef.current) {
+          drawCanvas(canvasRef.current, excelData[currentIndex], newIndex);
+        }
+        return newIndex;
+      });
     }
+  };
+
+  const drawCanvas = (canvas: HTMLCanvasElement, data: ExcelData, arrayIndex: number) => {
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      if (modalImageUrl) {
+      const image = new Image();
+      image.src = modalImageUrl;
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0);
+        const selectedData = data;
+        if (selectedData && Array.isArray(selectedData.nombres) && Array.isArray(selectedData.codigo)) {
+          const width = 2280;
+          const height = 1225;
+          const currentNombre = selectedData.nombres[arrayIndex];
+          const currentCodigo = selectedData.codigo[arrayIndex];
+          ctx.font = '70px Arial';
+          ctx.fillStyle = 'black';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${currentNombre}`, width, canvas.height / 2.5);
+          ctx.fillText(`${selectedData.actividadAcademica}`, width, height);
+          const lineHeight = 100;
+          const y = canvas.height / 1.7;
+          ctx.fillText("Curso-taller organizado por Ecomás Consultoria y Capacitaciones,", width, y);
+          ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal},`, width, y + lineHeight);
+          ctx.fillText("con una duración de 20 horas académicas", width, y + lineHeight * 2);
+          const fontSize = 45;
+          ctx.fillStyle = 'white';
+          ctx.font = `${fontSize}px Arial`;
+          ctx.fillText(`${selectedData.ponente}`, canvas.width / 6.6, canvas.height / 3.7);
+          const textYPx = 2130;
+          ctx.fillStyle = 'black';
+          ctx.fillText(`${currentCodigo}`, canvas.width / 6.6, textYPx);
+  
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'left';
+          const fontSizeT = 35;
+          ctx.font = `${fontSizeT}px Arial`;
+          const drawTemario = (temario: string, ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number) => {
+            const lineHeight = 50;
+            const bulletIndent = 380;
+            const marginLeft = 0;
+            const viñetas = temario.split('\n').map(viñeta => viñeta.trim());
+            let nivel = 0;
+            let nivelAnterior = 0;
+            let posY = y;
+            viñetas.forEach((viñeta) => {
+              nivel = (viñeta.match(/^\*+/) || [""])[0].length;
+              const sangria = (nivel - 1) * bulletIndent;
+              const xPos = x + marginLeft + sangria;
+              let text = viñeta.substring(nivel).trim();
+              const words = text.split(' ');
+              let line = '';
+              words.forEach(word => {
+                const testLine = line + word + ' ';
+                const testWidth = ctx.measureText(testLine).width;
+                if (testWidth > maxWidth) {
+                  ctx.fillText(line, xPos, posY);
+                  line = word;
+                  posY += lineHeight;
+                } else {
+                  line = testLine;
+                }
+              });
+              ctx.fillText(line, xPos, posY);
+              posY += lineHeight;
+              if (nivel < nivelAnterior) {
+                nivelAnterior = nivel;
+              }
+            });
+          };
+          const maxWidth = 800;
+          drawTemario(selectedData.temario || "", ctx, canvas.width / 6.6, canvas.height / 2.9, maxWidth);
+        }
+      };
+    }
+  }
   };
   
 
@@ -272,7 +358,28 @@ const getNumberFromFileName = (fileName: string): number => {
         </div>
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
+      <p>Imágenes dibujadas en el canvas: {numImagesDrawn}</p>
       <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Eliminar todas las imágenes</button>
+
+      <div className="drawn-image-list-container">
+        <h2>Imágenes Dibujadas</h2>
+        <div className="drawn-image-list">
+          {excelData && excelData.map((data, dataIndex) => (
+            <div key={dataIndex} className="drawn-image-item">
+              {/* Crea un canvas para cada nombre */}
+              {data.nombres.map((nombre, arrayIndex) => (
+                <div key={arrayIndex}>
+                  <canvas ref={(canvas) => {
+                    if (canvas) drawCanvas(canvas, data, arrayIndex);
+                  }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
+                  <p>{nombre}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {modalImageUrl && (
         <Modal onClose={closeModal}>
           <div className="flex items-center justify-center">
