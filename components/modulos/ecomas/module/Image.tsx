@@ -245,13 +245,12 @@ const getNumberFromFileName = (fileName: string): number => {
       setCurrentArrayIndex((prevIndex) => (prevIndex + 1) % excelData[currentDataIndex].nombres.length);
     }
   };
-  
+
   const handlePrevImage = () => {
     if (excelData && excelData[currentDataIndex]) {
       setCurrentArrayIndex((prevIndex) => (prevIndex - 1 + excelData[currentDataIndex].nombres.length) % excelData[currentDataIndex].nombres.length);
     }
   };
-  
 
   return (
     <div>
