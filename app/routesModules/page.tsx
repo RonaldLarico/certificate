@@ -7,11 +7,11 @@ const RoutesModules = () => {
       <div className="grid grid-cols-2 gap-96">
 
         <div className='uppercase font-extrabold text-2xl text-gray-600'>
-        <div className="border py-4 px-20 rounded-xl max-w-xs mx-auto text-center mb-20">
           <Link href="/modulos" className="text-center">
-            Ecomás
+            <div className="border py-4 px-20 rounded-xl max-w-xs mx-auto text-center mb-20">
+                Ecomás
+            </div>
           </Link>
-        </div>
         <div className="border py-4 px-20 rounded-xl text-center mb-20">
           <Link href="/" className="text-center">
             Cimade

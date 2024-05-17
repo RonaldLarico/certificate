@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import ImageUploader from './Image';
+import ImageUploader from './ImageFrom';
 
 interface ExcelData {
   nombres: string[];
