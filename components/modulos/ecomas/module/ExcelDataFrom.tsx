@@ -140,7 +140,6 @@ const ExcelDataFrom = () => {
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
         </div>
       </div>
-      {/* <button onClick={clearFiles} className="mx-auto mt-10 p-4 bg-gray-700 rounded-lg block">Limpiar</button> */}
     </section>
   );
 };

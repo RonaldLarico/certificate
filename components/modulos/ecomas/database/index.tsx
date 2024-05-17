@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 
 export const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {

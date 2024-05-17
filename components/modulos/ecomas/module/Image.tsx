@@ -1,5 +1,4 @@
-import React, { ChangeEvent, useEffect, useRef, useState, useContext } from 'react';
-import Modal from '@/components/share/Modal';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
 
 interface ExcelData {
@@ -22,101 +21,8 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
 
-  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [newImages, setNewImages] = useState<File[]>([])
-  const [currentDataIndex, setCurrentDataIndex] = useState<number>(0);
-  const [currentArrayIndex, setCurrentArrayIndex] = useState<number>(0);
-  const [numImagesDrawn, setNumImagesDrawn] = useState<number>(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    if (modalImageUrl && canvasRef.current && excelData) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const image = new Image();
-        image.src = modalImageUrl;
-        image.onload = () => {
-          canvas.width = image.width;
-          canvas.height = image.height;
-          ctx.drawImage(image, 0, 0);
-          const selectedData = excelData[currentIndex];
-        if (selectedData && Array.isArray(selectedData.nombres) && Array.isArray(selectedData.codigo)) {
-          for (let i = 0; i < selectedData.nombres.length; i++) {
-              console.log("siiiiiiiii",i)
-              const width = 2280
-              const height = 1225
-              ctx.font = '70px Arial';
-              ctx.fillStyle = 'black';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              const currentNombre = excelData[currentDataIndex].nombres[currentArrayIndex];
-              const currentCodigo = excelData[currentDataIndex].codigo[currentArrayIndex];
-              ctx.fillText(`${currentNombre}`, width, canvas.height * i + canvas.height / 2.5);
-              ctx.fillText(`${selectedData.actividadAcademica}`, width, canvas.height * i + height);
-              const lineHeight = 100; // Ajusta el espacio entre líneas según sea necesario
-              const y = canvas.height * i + canvas.height / 1.7; // Posición vertical inicial
-              ctx.fillText("Curso-taller organizado por Ecomás Consultoria y Capacitaciones,", width, y);
-              ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal},`, width, y + lineHeight);
-              ctx.fillText("con una duración de 20 horas académicas", width, y + lineHeight * 2);
-              const fontSize = 45;
-              ctx.fillStyle = 'white';
-              ctx.font = `${fontSize}px Arial`;
-              ctx.fillText(`${selectedData.ponente}`, canvas.width / 6.6, canvas.height * i + canvas.height / 3.7);
-              const textYPx = 2130;
-              ctx.fillStyle = 'black';
-              ctx.fillText(`${currentCodigo}`, canvas.width / 6.6, canvas.height * i + textYPx);
-
-              ctx.fillStyle = 'white';
-              ctx.textAlign = 'left';
-              const fontSizeT = 35;
-              ctx.font = `${fontSizeT}px Arial`;
-              const drawTemario = (temario: string, ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number) => {
-                const lineHeight = 50;
-                const bulletIndent = 380; // Ajusta la sangría según sea necesario
-                const marginLeft = 0;
-                const viñetas = temario.split('\n').map(viñeta => viñeta.trim());
-                let nivel = 0;
-                let nivelAnterior = 0;
-                let posY = y
-                viñetas.forEach((viñeta, index) => {
-                  nivel = (viñeta.match(/^\*+/) || [""])[0].length;
-                  const sangria = (nivel - 1) * bulletIndent;
-                  const xPos = x + marginLeft + sangria;
-                  let text = viñeta.substring(nivel).trim();
-                  const words = text.split(' ');
-                  let line = '';
-                  words.forEach(word => {
-                    const testLine = line + word + ' ';
-                    const testWidth = ctx.measureText(testLine).width;
-                    if (testWidth > maxWidth) {
-                      ctx.fillText(line, xPos, posY);
-                      line = word;
-                      posY += lineHeight;
-                    } else {
-                      line = testLine;
-                    }
-                  });
-                  const mainTextWidth = ctx.measureText(viñeta.substring(0, nivel).trim()).width;
-                  ctx.fillText(line, xPos, posY);
-                  posY += lineHeight;
-                  if (nivel < nivelAnterior) {
-                    nivelAnterior = nivel;
-                  }
-                });
-              };
-              const maxWidth = 800;
-              drawTemario(selectedData.temario || "", ctx, canvas.width / 6.6, canvas.height * i + canvas.height / 2.9, maxWidth);
-            }
-            setNumImagesDrawn(selectedData.nombres.length);
-          }
-        };
-      }
-    }
-  }, [modalImageUrl, excelData]);
 
   useEffect(() => {
     const getStoredImages = async () => {
@@ -161,11 +67,10 @@ const getNumberFromFileName = (fileName: string): number => {
     const files = event.target.files;
     if (files) {
       const selectedFiles = Array.from(files).slice(0, numModules);
-      setNewImages(selectedFiles);
       const texts = selectedFiles.map(() => "");
       setImageTexts(texts);
       saveImages(selectedFiles);
-      setImagesToShow((prevImages) => [...prevImages, ...selectedFiles])
+      setImagesToShow(selectedFiles)
     }
   };
 
@@ -223,52 +128,17 @@ const getNumberFromFileName = (fileName: string): number => {
     }
   };
 
-  const closeModal = () => {
-    setModalImageUrl(null);
-  };
-
-  const handleVerClick = (index: number) => {
-    const imageUrl = URL.createObjectURL(imagesToShow[index]);
-    setModalImageUrl(imageUrl);
-    setCurrentIndex(index);
-  };
-
-
-  const handlePrevImage = () => {
-    if (excelData && excelData[currentDataIndex] && canvasRef.current) {
-      setCurrentArrayIndex((prevIndex) => {
-        const newIndex = (prevIndex - 1 + excelData[currentDataIndex].nombres.length) % excelData[currentDataIndex].nombres.length;
-        if (canvasRef.current) {
-          drawCanvas(canvasRef.current, excelData[currentIndex], newIndex);
-        }
-        return newIndex;
-      });
-    }
-  };
-
-  const handleNextImage = () => {
-    if (excelData && excelData[currentDataIndex] && canvasRef.current) {
-      setCurrentArrayIndex((prevIndex) => {
-        const newIndex = (prevIndex + 1) % excelData[currentDataIndex].nombres.length;
-        if (canvasRef.current) {
-          drawCanvas(canvasRef.current, excelData[currentIndex], newIndex);
-        }
-        return newIndex;
-      });
-    }
-  };
-
-  const drawCanvas = (canvas: HTMLCanvasElement, data: ExcelData, arrayIndex: number) => {
+  const drawCanvas = (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      if (modalImageUrl) {
+      const selectedData = data;
+      const modalImageUrl = imagesToShow[dataIndex] ? URL.createObjectURL(imagesToShow[dataIndex]) : '';
       const image = new Image();
       image.src = modalImageUrl;
       image.onload = () => {
         canvas.width = image.width;
         canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
-        const selectedData = data;
         if (selectedData && Array.isArray(selectedData.nombres) && Array.isArray(selectedData.codigo)) {
           const width = 2280;
           const height = 1225;
@@ -292,7 +162,7 @@ const getNumberFromFileName = (fileName: string): number => {
           const textYPx = 2130;
           ctx.fillStyle = 'black';
           ctx.fillText(`${currentCodigo}`, canvas.width / 6.6, textYPx);
-  
+
           ctx.fillStyle = 'white';
           ctx.textAlign = 'left';
           const fontSizeT = 35;
@@ -335,9 +205,19 @@ const getNumberFromFileName = (fileName: string): number => {
         }
       };
     }
-  }
   };
-  
+
+  const groupedImages: { [name: string]: { dataIndex: number; arrayIndex: number }[] } = {};
+    excelData && excelData.forEach((data, dataIndex) => {
+      data.nombres.forEach((nombre, arrayIndex) => {
+        const key = `${nombre}_${dataIndex}_${arrayIndex}`; // Usamos una clave única para evitar duplicados
+        if (!groupedImages[nombre]) {
+          groupedImages[nombre] = [{ dataIndex, arrayIndex }];
+        } else {
+          groupedImages[nombre].push({ dataIndex, arrayIndex });
+      }
+    });
+  });
 
   return (
     <div>
@@ -353,44 +233,32 @@ const getNumberFromFileName = (fileName: string): number => {
             </div>
           )}
           <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p>
-          <button onClick={() => handleVerClick(index)} className='mr-28 p-2 text-blue-700 rounded-lg underline'>Ver</button>
+          {/* <button onClick={() => handleVerClick(index)} className='mr-28 p-2 text-blue-700 rounded-lg underline'>Ver</button> */}
           {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
         </div>
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
-      <p>Imágenes dibujadas en el canvas: {numImagesDrawn}</p>
-      <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Eliminar todas las imágenes</button>
+      <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
 
       <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
-        <div className="drawn-image-list">
-          {excelData && excelData.map((data, dataIndex) => (
-            <div key={dataIndex} className="drawn-image-item">
-              {/* Crea un canvas para cada nombre */}
-              {data.nombres.map((nombre, arrayIndex) => (
-                <div key={arrayIndex}>
-                  <canvas ref={(canvas) => {
-                    if (canvas) drawCanvas(canvas, data, arrayIndex);
-                  }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
-                  <p>{nombre}</p>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {modalImageUrl && (
-        <Modal onClose={closeModal}>
-          <div className="flex items-center justify-center">
-            <button onClick={handlePrevImage} className="p-2 bg-gray-800 text-white rounded-full mr-4 text-3xl">&lt;</button>
-            <div>
-              <canvas ref={canvasRef} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
-            </div>
-            <button onClick={handleNextImage} className="p-2 bg-gray-800 text-white rounded-full ml-4 text-3xl">&gt;</button>
+          <div className="drawn-image-list">
+            {excelData && Object.keys(groupedImages).map((nombre, index) => (
+              <div key={index} className="drawn-image-item">
+                <h3>{nombre}</h3>
+                {groupedImages[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
+                  <div key={subIndex}>
+                    <canvas ref={(canvas) => {
+                      if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex); // Asegúrate de que excelData[dataIndex] no sea null
+                    }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
+                    <p>{nombre}</p>
+                    ---------------------------------------------------------------------------------------------------------------------
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
-        </Modal>
-      )}
+        </div>
     </div>
   );
 };
