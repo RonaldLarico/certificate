@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
+import PDFexport from '@/app/PDFexport/page';
 
 interface ExcelData {
   nombres: string[];
@@ -23,6 +24,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
+  const [drawnImagesList, setDrawnImagesList] = useState<JSX.Element[]>([]);
 
   useEffect(() => {
     const getStoredImages = async () => {
@@ -219,6 +221,39 @@ const getNumberFromFileName = (fileName: string): number => {
     });
   });
 
+  const handleShowDrawnImages = () => {
+    const drawnImagesWindow = window.open("", "_blank");
+    if (drawnImagesWindow) {
+      drawnImagesWindow.document.write("<html><head><title>Drawn Images</title></head><body><h1>Imágenes Dibujadas</h1>");
+      Object.keys(groupedImages).forEach(nombre => {
+        drawnImagesWindow.document.write(`<h2>${nombre}</h2>`);
+        groupedImages[nombre].forEach(({ dataIndex, arrayIndex }) => {
+          drawnImagesWindow.document.write(`<canvas id="canvas_${dataIndex}_${arrayIndex}" width="1122" height="793" style="width: 1122px; height: 793px;"></canvas><br>`);
+          const canvasId = `canvas_${dataIndex}_${arrayIndex}`;
+          const canvas = drawnImagesWindow.document.getElementById(canvasId) as HTMLCanvasElement;
+          if (canvas) {
+            drawCanvas(canvas, excelData![dataIndex], dataIndex, arrayIndex);
+          }
+        });
+      });
+      drawnImagesWindow.document.write("</body></html>");
+    }
+  };
+  useEffect(() => {
+    const imagesList: JSX.Element[] = [];
+    Object.keys(groupedImages).forEach(nombre => {
+      groupedImages[nombre].forEach(({ dataIndex, arrayIndex }) => {
+        const canvasId = `canvas_${dataIndex}_${arrayIndex}`;
+        const canvas = document.createElement('canvas');
+        canvas.width = 1122;
+        canvas.height = 793;
+        drawCanvas(canvas, excelData![dataIndex], dataIndex, arrayIndex);
+        imagesList.push(<canvas key={canvasId} id={canvasId} width={1122} height={793} style={{ width: '1122px', height: '793px' }} />);
+      });
+    });
+    setDrawnImagesList(imagesList);
+  }, [excelData]);
+
   return (
     <div>
       <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes ({numModules})</h1>
@@ -239,8 +274,9 @@ const getNumberFromFileName = (fileName: string): number => {
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
       <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
+      <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button>
 
-      <div className="drawn-image-list-container">
+      {/* <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
             {excelData && Object.keys(groupedImages).map((nombre, index) => (
@@ -248,17 +284,20 @@ const getNumberFromFileName = (fileName: string): number => {
                 <h3>{nombre}</h3>
                 {groupedImages[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
                   <div key={subIndex}>
-                    <canvas ref={(canvas) => {
-                      if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex); // Asegúrate de que excelData[dataIndex] no sea null
-                    }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
-                    <p>{nombre}</p>
-                    ---------------------------------------------------------------------------------------------------------------------
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+                  <canvas ref={(canvas) => {
+                    if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
+                  }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
+                  <p>{nombre}</p>
+                  ---------------------------------------------------------------------------------------------------------------------
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
+      </div> */}
+
+      <PDFexport drawnImagesList={drawnImagesList || []} />
+
     </div>
   );
 };
