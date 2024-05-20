@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
 import PDFexport from '@/app/PDFexport/page';
-import Link from 'next/link';
 
 interface ExcelData {
   nombres: string[];
@@ -130,15 +129,19 @@ const getNumberFromFileName = (fileName: string): number => {
       console.error('Error al abrir la base de datos:', error);
     }
   };
+  const [convertedImages, setConvertedImages] = useState<File[]>([]);
+  const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
 
-  const drawCanvas = (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
+  const drawCanvas = async (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
+    if (!convertedImageIndexes.includes(dataIndex)) {
+      setConvertedImageIndexes(prevIndexes => [...prevIndexes, dataIndex]);
     const ctx = canvas.getContext('2d');
     if (ctx) {
       const selectedData = data;
       const modalImageUrl = imagesToShow[dataIndex] ? URL.createObjectURL(imagesToShow[dataIndex]) : '';
       const image = new Image();
       image.src = modalImageUrl;
-      image.onload = () => {
+      image.onload = async () => {
         canvas.width = image.width;
         canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
@@ -205,10 +208,19 @@ const getNumberFromFileName = (fileName: string): number => {
           };
           const maxWidth = 800;
           drawTemario(selectedData.temario || "", ctx, canvas.width / 6.6, canvas.height / 2.9, maxWidth);
+
+          const dataURL = canvas.toDataURL('image/jpeg');
+          const blob = await (await fetch(dataURL)).blob();
+          const fileName = `${currentNombre}_${dataIndex}_${arrayIndex}.jpeg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+          // Almacenar la imagen convertida en un array
+          setConvertedImages(images => [...images, file]);
         }
       };
     }
   };
+};
 
   const groupedImages: { [name: string]: { dataIndex: number; arrayIndex: number }[] } = {};
     excelData && excelData.forEach((data, dataIndex) => {
@@ -221,6 +233,18 @@ const getNumberFromFileName = (fileName: string): number => {
       }
     });
   });
+
+  const groupedConvertedImages: { [name: string]: File[] } = {};
+
+// Iterar sobre las imágenes convertidas y agruparlas por nombre
+convertedImages.forEach((image) => {
+  const imageName = image.name.split('_')[0]; // Obtener el nombre de la imagen ignorando el número
+  if (!groupedConvertedImages[imageName]) {
+    groupedConvertedImages[imageName] = [image]; // Crear un nuevo grupo si no existe
+  } else {
+    groupedConvertedImages[imageName].push(image); // Agregar la imagen al grupo correspondiente
+  }
+});
 
   /* const handleShowDrawnImages = () => {
     const drawnImagesWindow = window.open("", "_blank");
@@ -240,7 +264,7 @@ const getNumberFromFileName = (fileName: string): number => {
       drawnImagesWindow.document.write("</body></html>");
     }
   }; */
-  useEffect(() => {
+/*   useEffect(() => {
     const imagesList: JSX.Element[] = [];
     Object.keys(groupedImages).forEach(nombre => {
       groupedImages[nombre].forEach(({ dataIndex, arrayIndex }) => {
@@ -253,9 +277,9 @@ const getNumberFromFileName = (fileName: string): number => {
       });
     });
     setDrawnImagesList(imagesList);
-    console.log("drawnImagesList:", imagesList);
-  }, [excelData]);
+  }, [excelData]); */
 
+  {console.log('convertedImages:', convertedImages)}
   return (
     <div>
       <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes ({numModules})</h1>
@@ -277,22 +301,30 @@ const getNumberFromFileName = (fileName: string): number => {
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
       <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
       {/* <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button> */}
-      <Link href="/PDFexport">
-        <button className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Siguiente</button>
-      </Link>
 
-      {drawnImagesList.map((canvas, index) => (
-        <div key={index} className="drawn-image-item">
-          {canvas}
-        </div>
+      <h1>Imágenes Convertidas a JPEG</h1>
+    <ul>
+      {Object.keys(groupedConvertedImages).map((name, index) => (
+        <li key={index}>
+          <h3 className='text-red-500'>{name}</h3>
+          <ul>
+            {groupedConvertedImages[name].map((image, subIndex) => (
+              <li key={subIndex}>
+                <img src={URL.createObjectURL(image)} alt={`Converted Image ${subIndex}`} width={1122} height={793} style={{ width: '1122px', height: '793px' }} />
+                <p>{image.name}</p>
+              </li>
+            ))}
+          </ul>
+        </li>
       ))}
+    </ul>
 
-      <div className="drawn-image-list-container">
+     <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
             {excelData && Object.keys(groupedImages).map((nombre, index) => (
               <div key={index} className="drawn-image-item">
-                <h3>{nombre}</h3>
+                <h3 className='text-green-600'>{nombre}</h3>
                 {groupedImages[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
                   <div key={subIndex}>
                   <canvas ref={(canvas) => {
