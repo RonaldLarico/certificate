@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
 import PDFexport from '@/app/PDFexport/page';
+import Link from 'next/link';
 
 interface ExcelData {
   nombres: string[];
@@ -221,7 +222,7 @@ const getNumberFromFileName = (fileName: string): number => {
     });
   });
 
-  const handleShowDrawnImages = () => {
+  /* const handleShowDrawnImages = () => {
     const drawnImagesWindow = window.open("", "_blank");
     if (drawnImagesWindow) {
       drawnImagesWindow.document.write("<html><head><title>Drawn Images</title></head><body><h1>Imágenes Dibujadas</h1>");
@@ -238,7 +239,7 @@ const getNumberFromFileName = (fileName: string): number => {
       });
       drawnImagesWindow.document.write("</body></html>");
     }
-  };
+  }; */
   useEffect(() => {
     const imagesList: JSX.Element[] = [];
     Object.keys(groupedImages).forEach(nombre => {
@@ -252,6 +253,7 @@ const getNumberFromFileName = (fileName: string): number => {
       });
     });
     setDrawnImagesList(imagesList);
+    console.log("drawnImagesList:", imagesList);
   }, [excelData]);
 
   return (
@@ -274,9 +276,18 @@ const getNumberFromFileName = (fileName: string): number => {
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
       <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
-      <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button>
+      {/* <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button> */}
+      <Link href="/PDFexport">
+        <button className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Siguiente</button>
+      </Link>
 
-      {/* <div className="drawn-image-list-container">
+      {drawnImagesList.map((canvas, index) => (
+        <div key={index} className="drawn-image-item">
+          {canvas}
+        </div>
+      ))}
+
+      <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
             {excelData && Object.keys(groupedImages).map((nombre, index) => (
@@ -294,7 +305,7 @@ const getNumberFromFileName = (fileName: string): number => {
             </div>
           ))}
         </div>
-      </div> */}
+      </div>
 
       <PDFexport drawnImagesList={drawnImagesList || []} />
 
