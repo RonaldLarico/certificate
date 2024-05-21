@@ -1,7 +1,7 @@
 
 export const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open('ImageDatabaseEcomas', 1);
+    const request = window.indexedDB.open('ImageDatabaseEcomas', 2);
     request.onerror = (event) => {
       console.error('Error al abrir la base de datos:', request.error);
       reject(request.error);
@@ -10,8 +10,12 @@ export const openDatabase = (): Promise<IDBDatabase> => {
       console.log('onupgradeneeded event triggered');
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains('ecomas')) {
-        console.log('Creating object store: images');
+        console.log('Creating object store: ecomas');
         db.createObjectStore('ecomas', { autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('drawnImages')) {
+        console.log('Creating object store: drawnImages');
+        db.createObjectStore('drawnImagesEcomas', { autoIncrement: true });
       }
     };
     request.onsuccess = (event) => {

@@ -13,11 +13,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "jspdf": "^2.5.1",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.51.3",
+    "react-router-dom": "^6.23.1",
     "react-slick": "^0.30.2",
     "react-slider": "^2.0.6",
     "slick-carousel": "^1.8.1",

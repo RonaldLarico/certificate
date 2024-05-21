@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
-import PDFexport from '@/app/PDFexport/page';
+import Link from 'next/link';
 
 interface ExcelData {
   nombres: string[];
@@ -218,6 +218,17 @@ const getNumberFromFileName = (fileName: string): number => {
           setConvertedImages(images => [...images, file]);
           setDrawnImagesList(prevList => [...prevList, <img src={dataURL} alt={`Converted Image ${arrayIndex}`} width={canvas.width} height={canvas.height} />]);
 
+          try {
+            const db = await openDatabase();
+            const transaction = db.transaction(['drawnImagesEcomas'], 'readwrite');
+            const objectStore = transaction.objectStore('drawnImagesEcomas');
+            const request = objectStore.add(file);
+            request.onerror = (event) => {
+              console.error('Error al guardar la imagen en la base de datos:', (event.target as IDBRequest).error);
+            };
+          } catch (error) {
+            console.error('Error al abrir la base de datos:', error);
+          }
         }
       };
     }
@@ -275,8 +286,12 @@ Object.keys(groupedConvertedImages).forEach((name) => {
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
       <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
       {/* <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button> */}
+      <Link href="/pdf">
+        <button className="mt-4 p-2 bg-green-600 text-white rounded-lg mr-4">Siguiente</button>
+      </Link>
+      <button onClick={() => window.history.back()} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">Atrás</button>
 
-      <h1>Imágenes Convertidas a JPEG</h1>
+      {/* <h1>Imágenes Convertidas a JPEG</h1>
     <ul>
       {Object.keys(groupedConvertedImages).map((name, index) => (
         <li key={index}>
@@ -287,8 +302,8 @@ Object.keys(groupedConvertedImages).forEach((name) => {
                  <img
               src={URL.createObjectURL(item.image)}
               alt={`Converted Image ${subIndex}`}
-              width={1122} // Ancho en píxeles para tamaño A4 (8.27 pulgadas)
-              height={793} // Alto en píxeles para tamaño A4 (11.7 pulgadas)
+              width={1122}
+              height={793}
               //style={{ width: '1122px', height: '793px' }}
             />
                 <p>{item.image.name}</p>
@@ -297,7 +312,7 @@ Object.keys(groupedConvertedImages).forEach((name) => {
           </ul>
         </li>
       ))}
-    </ul>
+    </ul> */}
 
      <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
