@@ -9,7 +9,7 @@ const PDFexport: React.FC<PDFexportProps> = ({ drawnImagesList }) => {
   
   return (
     <div>
-      <h2>Imágenes Dibujadas en PDF</h2>
+      <h2 className="text-yellow-500">Imágenes Dibujadas en PDF</h2>
       <div className="pdf-image-list">
         {drawnImagesList && drawnImagesList.length > 0 ? (
           drawnImagesList.map((image, index) => (

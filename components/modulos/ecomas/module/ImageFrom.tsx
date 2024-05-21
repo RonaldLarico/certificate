@@ -216,6 +216,8 @@ const getNumberFromFileName = (fileName: string): number => {
 
           // Almacenar la imagen convertida en un array
           setConvertedImages(images => [...images, file]);
+          setDrawnImagesList(prevList => [...prevList, <img src={dataURL} alt={`Converted Image ${arrayIndex}`} width={canvas.width} height={canvas.height} />]);
+
         }
       };
     }
@@ -234,50 +236,23 @@ const getNumberFromFileName = (fileName: string): number => {
     });
   });
 
-  const groupedConvertedImages: { [name: string]: File[] } = {};
+  const groupedConvertedImages: { [name: string]: { image: File; number: number }[] } = {};
 
 // Iterar sobre las imágenes convertidas y agruparlas por nombre
 convertedImages.forEach((image) => {
-  const imageName = image.name.split('_')[0]; // Obtener el nombre de la imagen ignorando el número
+  const imageNameParts = image.name.split('_');
+  const imageName = imageNameParts[0]; // Obtener el nombre de la imagen ignorando el número
+  const imageNumber = parseInt(imageNameParts[1]); // Obtener el número de la imagen
   if (!groupedConvertedImages[imageName]) {
-    groupedConvertedImages[imageName] = [image]; // Crear un nuevo grupo si no existe
+    groupedConvertedImages[imageName] = [{ image, number: imageNumber }]; // Crear un nuevo grupo si no existe
   } else {
-    groupedConvertedImages[imageName].push(image); // Agregar la imagen al grupo correspondiente
+    groupedConvertedImages[imageName].push({ image, number: imageNumber }); // Agregar la imagen al grupo correspondiente
   }
 });
+Object.keys(groupedConvertedImages).forEach((name) => {
+  groupedConvertedImages[name].sort((a, b) => a.number - b.number);
+});
 
-  /* const handleShowDrawnImages = () => {
-    const drawnImagesWindow = window.open("", "_blank");
-    if (drawnImagesWindow) {
-      drawnImagesWindow.document.write("<html><head><title>Drawn Images</title></head><body><h1>Imágenes Dibujadas</h1>");
-      Object.keys(groupedImages).forEach(nombre => {
-        drawnImagesWindow.document.write(`<h2>${nombre}</h2>`);
-        groupedImages[nombre].forEach(({ dataIndex, arrayIndex }) => {
-          drawnImagesWindow.document.write(`<canvas id="canvas_${dataIndex}_${arrayIndex}" width="1122" height="793" style="width: 1122px; height: 793px;"></canvas><br>`);
-          const canvasId = `canvas_${dataIndex}_${arrayIndex}`;
-          const canvas = drawnImagesWindow.document.getElementById(canvasId) as HTMLCanvasElement;
-          if (canvas) {
-            drawCanvas(canvas, excelData![dataIndex], dataIndex, arrayIndex);
-          }
-        });
-      });
-      drawnImagesWindow.document.write("</body></html>");
-    }
-  }; */
-/*   useEffect(() => {
-    const imagesList: JSX.Element[] = [];
-    Object.keys(groupedImages).forEach(nombre => {
-      groupedImages[nombre].forEach(({ dataIndex, arrayIndex }) => {
-        const canvasId = `canvas_${dataIndex}_${arrayIndex}`;
-        const canvas = document.createElement('canvas');
-        canvas.width = 1122;
-        canvas.height = 793;
-        drawCanvas(canvas, excelData![dataIndex], dataIndex, arrayIndex);
-        imagesList.push(<canvas key={canvasId} id={canvasId} width={1122} height={793} style={{ width: '1122px', height: '793px' }} />);
-      });
-    });
-    setDrawnImagesList(imagesList);
-  }, [excelData]); */
 
   {console.log('convertedImages:', convertedImages)}
   return (
@@ -294,7 +269,6 @@ convertedImages.forEach((image) => {
             </div>
           )}
           <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p>
-          {/* <button onClick={() => handleVerClick(index)} className='mr-28 p-2 text-blue-700 rounded-lg underline'>Ver</button> */}
           {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
         </div>
       ))}
@@ -308,10 +282,16 @@ convertedImages.forEach((image) => {
         <li key={index}>
           <h3 className='text-red-500'>{name}</h3>
           <ul>
-            {groupedConvertedImages[name].map((image, subIndex) => (
+            {groupedConvertedImages[name].map((item, subIndex) => (
               <li key={subIndex}>
-                <img src={URL.createObjectURL(image)} alt={`Converted Image ${subIndex}`} width={1122} height={793} style={{ width: '1122px', height: '793px' }} />
-                <p>{image.name}</p>
+                 <img
+              src={URL.createObjectURL(item.image)}
+              alt={`Converted Image ${subIndex}`}
+              width={1122} // Ancho en píxeles para tamaño A4 (8.27 pulgadas)
+              height={793} // Alto en píxeles para tamaño A4 (11.7 pulgadas)
+              //style={{ width: '1122px', height: '793px' }}
+            />
+                <p>{item.image.name}</p>
               </li>
             ))}
           </ul>
@@ -339,7 +319,7 @@ convertedImages.forEach((image) => {
         </div>
       </div>
 
-      <PDFexport drawnImagesList={drawnImagesList || []} />
+      {/* <PDFexport drawnImagesList={drawnImagesList || []} /> */}
 
     </div>
   );
