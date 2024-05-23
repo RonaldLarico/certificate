@@ -268,28 +268,27 @@ Object.keys(groupedConvertedImages).forEach((name) => {
   {console.log('convertedImages:', convertedImages)}
   return (
     <div>
-      <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar imagenes ({numModules})</h1>
-      <div className='image-container relative mb-10'>
-        <input type='file' accept="image/*" onChange={handleImage} multiple className='bg-red-600/50'/>
+      <h1 className='mb-10 text-center p-4 font-bold text-xl bg-blue-500 text-white rounded-s-xl'>Cargar imagenes ({numModules})</h1>
+      <div className='flex justify-center image-container relative mb-10 text-white font-mono'>
+        <input type='file' accept="image/*" onChange={handleImage} multiple className='p-4 rounded-xl bg-blue-500 cursor-pointer hover:scale-110 duration-300'/>
       </div>
       {imagesToShow.map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
-            <div className='bg-red-600/35 p-2 w-80 rounded-lg'>
-              <p className=''>{file.name}</p>
+            <div className='border-2 border-blue-500 p-2 w-full mr-10 rounded-lg'>
+              <p className='text-blue-500'>{file.name}</p>
             </div>
           )}
-          <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p>
+          {/* <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p> */}
           {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
         </div>
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
-      <button onClick={handleDeleteAllImages} className='mt-4 p-2 bg-red-600 text-white rounded-lg'>Cambiar diseño de las imágenes</button>
+      <div className="font-extrabold text-xl hover:scale-110 duration-300">
       {/* <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button> */}
-      <Link href="/pdf">
-        <button className="mt-4 p-2 bg-green-600 text-white rounded-lg mr-4">Siguiente</button>
-      </Link>
-      <button onClick={() => window.history.back()} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">Atrás</button>
+      <button onClick={() => window.history.back()} className="mt-4 p-3 w-full bg-blue-600 text-white rounded-s-xl uppercase">Atrás</button>
+      </div>
+      <button onClick={handleDeleteAllImages} className='mt-4 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
 
       {/* <h1>Imágenes Convertidas a JPEG</h1>
     <ul>

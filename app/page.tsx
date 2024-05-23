@@ -1,25 +1,19 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
+import styles from "./page.module.css";
 
 export default function Home() {
-  const [selectedGroup, setSelectedGroup] = useState(""); // Estado para almacenar el grupo seleccionado
-
-  // Función para manejar el clic en los enlaces de los grupos
-  const handleGroupClick = (groupName: string) => {
-    setSelectedGroup(groupName); // Actualiza el estado con el nombre del grupo seleccionado
-  };
 
   return (
-    <main>
-        <div className="flex justify-center mt-60 gap-40">
-          <Link href="/" className="border p-4 rounded-xl">
+    <main className={styles.main}>
+        <div className="flex justify-center mt-60 gap-40 font-extrabold text-xl text-blue-500">
+          <Link href="/" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
             Diplomados
           </Link>
-          <Link href="/" className="border p-4 rounded-xl">
+          <Link href="/" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
             Cursos
           </Link>
-          <Link href="/routesModules" className="border p-4 rounded-xl">
+          <Link href="/routesModules" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
             Módulos
           </Link>
         </div>

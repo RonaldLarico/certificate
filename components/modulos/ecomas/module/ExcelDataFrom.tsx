@@ -2,6 +2,7 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ImageUploader from './ImageFrom';
+import Link from 'next/link';
 
 interface ExcelData {
   nombres: string[];
@@ -22,6 +23,8 @@ const ExcelDataFrom = () => {
   const [excelFiles, setExcelFiles] = useState<File[]>(Array(numModules).fill(null));
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
+  const [excelLoaded, setExcelLoaded] = useState(false);
+
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -45,6 +48,7 @@ const ExcelDataFrom = () => {
         }
       });
       setImagesAndExcel(updatedImagesAndExcel);
+      setExcelLoaded(true);
     }
   };
 
@@ -96,8 +100,8 @@ const ExcelDataFrom = () => {
   return (
     <section className=''>
       <h1 className='mt-5 ml-5'>Módulares/Ecomás</h1>
-      <div className='flex justify-center mt-10 gap-6'>
-        <h1 className='text-3xl font-bold'>Número de módulos</h1>
+      <div className='flex justify-center items-center mt-10 gap-6 p-8 bg-blue-600'>
+        <h1 className='text-4xl font-extrabold text-white'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>
           <div className='relative'>
             <select {...{ required: true }} name='country' className="bg-gray-100 border-2 border-gray-300 text-gray-600 text-3xl rounded-lg ps-5 p-1 font-bold" onChange={handleModuleChange}>
@@ -122,22 +126,26 @@ const ExcelDataFrom = () => {
             </div>
           )}
           </div>
-        <div className='mt-20'>
-          <h1 className='mb-10 text-center mr-40 p-3 border-2 rounded-xl font-bold text-xl'>Cargar archivos excel ({numModules})</h1>
-          <div className='relative mb-10'>
+        <div className='mt-20 mr-16'>
+          <h1 className='mb-10 text-center p-4 font-bold text-xl bg-green-600/80 w-full text-white rounded-e-xl'>Cargar archivos excel ({numModules})</h1>
+          <div className='flex relative mb-10 text-white font-mono justify-center'>
           <input type="file" accept=".xlsx, .xlsm, .xls" onChange={handleExcelFileChange} multiple
-            className='bg-green-600/50' />
+            className='p-4 rounded-xl bg-green-600/80 cursor-pointer hover:scale-110 duration-300' />
           </div>
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
               {file && (
-                <div className='inline-flex'>
-                  <p className='w-auto p-2 bg-green-600/35 rounded-lg'>{file.name}</p>
+                <div className='inline-flex text-green-600/80'>
+                  <p className='w-auto p-2 border-2 border-green-600/80 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>
           ))}
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
+          <Link href="/pdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded ? 'opacity-50' : ''}`}>Siguiente</button>
+          </Link>
+
         </div>
       </div>
     </section>

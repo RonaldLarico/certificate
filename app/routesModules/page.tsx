@@ -6,40 +6,40 @@ const RoutesModules = () => {
     <main className='flex justify-center items-center h-screen'>
       <div className="grid grid-cols-2 gap-96">
 
-        <div className='uppercase font-extrabold text-2xl text-gray-600'>
+        <div className='uppercase font-extrabold text-2xl text-gray-100'>
           <Link href="/modulos" className="text-center">
-            <div className="border py-4 px-20 rounded-xl max-w-xs mx-auto text-center mb-20">
+            <div className="bg-blue-500 py-4 px-20 rounded-xl max-w-xs mx-auto text-center mb-20 hover:scale-125 duration-300">
                 Ecomás
             </div>
           </Link>
-        <div className="border py-4 px-20 rounded-xl text-center mb-20">
           <Link href="/" className="text-center">
+        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
             Cimade
-          </Link>
         </div>
-        <div className="border py-4 px-20 rounded-xl text-center">
+          </Link>
           <Link href="/" className="text-center">
+        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center hover:scale-125 duration-300">
             Binex
-          </Link>
         </div>
+          </Link>
         </div>
 
-        <div className='uppercase font-extrabold text-2xl text-gray-600'>
-        <div className="border py-4 px-20 rounded-xl text-center mb-20">
+        <div className='uppercase font-extrabold text-2xl text-gray-100'>
           <Link href="/" className="">
+        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
             Promás
-          </Link>
         </div>
-        <div className="border py-4 px-20 rounded-xl text-center mb-20">
+          </Link>
           <Link href="/" className="">
+        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
             Sayan
-          </Link>
         </div>
-        <div className="border py-4 px-20 rounded-xl text-center">
+          </Link>
           <Link href="/" className="">
+        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center hover:scale-125 duration-300">
             Rizo
-          </Link>
         </div>
+          </Link>
         </div>
       </div>
     </main>
