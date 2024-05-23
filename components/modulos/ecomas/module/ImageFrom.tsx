@@ -42,7 +42,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
         };
         setImagesToShow(storedImages);
       } catch (error) {
-        console.error('Error al abrir la base de datos:', error);
+        console.error('Error al abrir la base de datossssssssssssss:', error);
       }
     };
     getStoredImages();
@@ -126,7 +126,7 @@ const getNumberFromFileName = (fileName: string): number => {
         console.error('Error al eliminar las imágenes:', (event.target as IDBRequest).error);
       };
     } catch (error) {
-      console.error('Error al abrir la base de datos:', error);
+      console.error('Error al abrir la base de datosdddddddddddd:', error);
     }
   };
   const [convertedImages, setConvertedImages] = useState<File[]>([]);
@@ -220,8 +220,8 @@ const getNumberFromFileName = (fileName: string): number => {
 
           try {
             const db = await openDatabase();
-            const transaction = db.transaction(['drawnImagesEcomas'], 'readwrite');
-            const objectStore = transaction.objectStore('drawnImagesEcomas');
+            const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
+            const objectStore = transaction.objectStore('ImagesEcomas');
             const request = objectStore.add(file);
             request.onerror = (event) => {
               console.error('Error al guardar la imagen en la base de datos:', (event.target as IDBRequest).error);

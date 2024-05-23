@@ -39,6 +39,10 @@ const ExcelDataFrom = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
+      // Obtén la ruta del archivo seleccionado
+      const filePath = event.target.value;
+      // Guarda la ruta en el localStorage
+      localStorage.setItem('excelFilePath', filePath);
       const updatedImagesAndExcel = newExcelFiles.map((file, index) => {
         console.log(`Excel file ${file.name} is related to imageId ${index}`);
         return {
@@ -136,7 +140,7 @@ const ExcelDataFrom = () => {
             <div key={index} className='mb-4'>
               {file && (
                 <div className='inline-flex text-green-600/80'>
-                  <p className='w-auto p-2 border-2 border-green-600/80 rounded-lg'>{file.name}</p>
+                  <p className='p-2 w-full border-2 border-green-600/80 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>

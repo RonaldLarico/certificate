@@ -11,13 +11,14 @@ const ImageExport = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [convertedGroups, setConvertedGroups] = useState<string[]>([]);
   const [conversionInProgress, setConversionInProgress] = useState(false);
+  const [excelFilePath, setExcelFilePath] = useState<string | null>(null);
 
   useEffect(() => {
     const getImagesFromDB = async () => {
       try {
         const db = await openDatabase();
-        const transaction = db.transaction(['drawnImagesEcomas'], 'readonly');
-        const objectStore = transaction.objectStore('drawnImagesEcomas');
+        const transaction = db.transaction(['ImagesEcomas'], 'readonly');
+        const objectStore = transaction.objectStore('ImagesEcomas');
         const storedImages: File[] = [];
 
         const cursorRequest = objectStore.openCursor();
@@ -48,6 +49,10 @@ const ImageExport = () => {
       }
     };
     getImagesFromDB();
+    const routeExcel = localStorage.getItem('excelFilePath');
+    if (routeExcel) {
+      setExcelFilePath(routeExcel);
+    }
   }, []);
 
   const convertGroupToPDF = async (group: { name: string, images: File[] }) => {
@@ -82,6 +87,27 @@ const ImageExport = () => {
       };
       reader.onerror = reject;
       reader.readAsDataURL(image);
+      // Envía el PDF a la API para guardar en la misma ruta que el archivo Excel
+      if (excelFilePath) {
+        const formData = new FormData();
+        formData.append('emailService', 'gmail');
+        formData.append('file', pdf.output('blob') as Blob);
+        formData.append('fileName', `${groupName}_${index + 1}.pdf`);
+        formData.append('rutaArchivoExcel', excelFilePath);
+
+        fetch("../api/savePDF", {
+          method: "POST",
+          body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data); // Puedes manejar la respuesta de la API aquí si es necesario
+          alert('Guardado con éxito');
+        })
+        .catch(error => console.error('Error al enviar el PDF a la API:', error));
+      } else {
+        console.error('No se encontró la ruta del archivo Excel.');
+      }
     });
   };
 
@@ -103,6 +129,21 @@ const ImageExport = () => {
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + currentGroup!.images.length) % currentGroup!.images.length);
+  };
+
+  const deleteImagesFromDB = async () => {
+    try {
+      const db = await openDatabase();
+      const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
+      const objectStore = transaction.objectStore('ImagesEcomas');
+      const clearRequest = objectStore.clear();
+      clearRequest.onsuccess = () => {
+        setImageGroups([]);
+        console.log('Imágenes eliminadas correctamente.');
+      };
+    } catch (error) {
+      console.error('Error al eliminar las imágenes:', error);
+    }
   };
 
   return (
@@ -131,6 +172,7 @@ const ImageExport = () => {
           {conversionInProgress ? 'Convirtiendo...' : 'Convertir todo a PDF'}
         </button>
         <button onClick={() => window.history.back()} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">Atrás</button>
+        <button onClick={deleteImagesFromDB}>Eliminar imágenes</button>
         {currentGroup && (
           <Modal onClose={closeModal}>
             <div className="modal-buttons" style={{ textAlign: 'center' }}>

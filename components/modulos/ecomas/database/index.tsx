@@ -1,29 +1,41 @@
+let db: IDBDatabase | null = null; // Variable para almacenar la instancia de la base de datos
 
 export const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open('ImageDatabaseEcomas', 2);
-    request.onerror = (event) => {
-      console.error('Error al abrir la base de datos:', request.error);
-      reject(request.error);
-    };
-    request.onupgradeneeded = (event) => {
-      console.log('onupgradeneeded event triggered');
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains('ecomas')) {
-        console.log('Creating object store: ecomas');
-        db.createObjectStore('ecomas', { autoIncrement: true });
-      }
-      if (!db.objectStoreNames.contains('drawnImages')) {
-        console.log('Creating object store: drawnImages');
-        db.createObjectStore('drawnImagesEcomas', { autoIncrement: true });
-      }
-    };
-    request.onsuccess = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+    if (db) {
+      // Si la base de datos ya está abierta, resolvemos con la instancia existente
       resolve(db);
-    };
+    } else {
+      const request = window.indexedDB.open('ImageDatabaseEcomas', 2);
+      request.onerror = (event) => {
+        console.error('Error al abrir la base de datostttttttttttttttt:', request.error);
+        reject(request.error);
+      };
+      request.onupgradeneeded = (event) => {
+        console.log('onupgradeneeded event triggered');
+        const dbInstance = (event.target as IDBOpenDBRequest).result;
+        if (!dbInstance.objectStoreNames.contains('ecomas')) {
+          console.log('Creating object store: ecomas');
+          dbInstance.createObjectStore('ecomas', { autoIncrement: true });
+        }
+        if (!dbInstance.objectStoreNames.contains('ImagesEcomas')) {
+          console.log('Creating object store: ImagesEcomas');
+          dbInstance.createObjectStore('ImagesEcomas', { autoIncrement: true });
+        }
+      };
+      request.onsuccess = (event) => {
+        db = (event.target as IDBOpenDBRequest).result;
+        resolve(db);
+      };
+    }
   });
 };
+
+// Función para obtener la instancia de la base de datos
+export const getDatabase = (): IDBDatabase | null => {
+  return db;
+};
+
 
 /* const Database: React.FC = () => {
   useEffect(() => {
