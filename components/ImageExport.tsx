@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { openDatabase } from '@/components/modulos/ecomas/database/index';
 import jsPDF from 'jspdf';
 import Modal from '@/components/share/Modal';
-import API from '../../../../app/api/savePDF/route'
 
 const ImageExport = () => {
   const [imageGroups, setImageGroups] = useState<{ name: string, images: File[] }[]>([]);
@@ -50,10 +49,9 @@ const ImageExport = () => {
       }
     };
     getImagesFromDB();
-    const routeExcel = localStorage.getItem('excelFilePath');
-    if (routeExcel) {
-      setExcelFilePath(routeExcel);
-    }
+    // Obtener la ruta del archivo Excel del localStorage
+    const rutaArchivoExcel = localStorage.getItem('excelFilePath');
+    setExcelFilePath(rutaArchivoExcel); // Establecer la ruta en el estado
   }, []);
 
   const convertGroupToPDF = async (group: { name: string, images: File[] }) => {
@@ -73,53 +71,48 @@ const ImageExport = () => {
   };
 
   const convertImageToPDF = async (image: File, groupName: string, index: number) => {
-    return new Promise<void>((resolve, reject) => {
+    try {
       const pdf = new jsPDF({
         orientation: 'landscape'
       });
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         const imgData = reader.result as string;
         pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-        const fileName = `${groupName}_${index + 1}.pdf`;
-        pdf.save(fileName.replace('.jpeg', ''));
-        setConvertedGroups(prevGroups => [...prevGroups, fileName.replace('.jpeg', '')]);
-        // Envía el PDF a la API para guardar en la misma ruta que el archivo Excel
-        if (excelFilePath) {
-          const formData = new FormData();
-          formData.append('emailService', 'gmail');
-          formData.append('file', pdf.output('blob') as Blob);
-          formData.append('fileName', `${groupName}_${index + 1}.pdf`);
-          formData.append('rutaArchivoExcel', excelFilePath);
+        /* const fileName = `${groupName}_${index + 1}.pdf`;
+        pdf.save(fileName.replace('.jpeg', '')); */
+  
+        // Convertir el PDF a una cadena Base64
+        const pdfBase64 = pdf.output('datauristring');
+        // Crear el objeto JSON con los datos del PDF
+        const pdfData = {
+          groupName,
+          index,
+          pdfBase64,
+          rutaArcivoExcel: excelFilePath
+        };
+        // Enviar el objeto JSON a la API
+      const response = await fetch("../api/savePDF", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(pdfData)
+      });
 
-          fetch("../../../../app/api/savePDF", {
-            method: "POST",
-            body: formData,
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Error en la solicitud');
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log(data); // Puedes manejar la respuesta de la API aquí si es necesario
-            alert('Guardado con éxito');
-            resolve(); // Resuelve la promesa después de recibir una respuesta exitosa de la API
-          })
-          .catch(error => {
-            console.error('Error al enviar el PDF a la API:', error);
-            alert('Error al enviar el PDF a la API')
-            reject(error); // Rechaza la promesa si hay un error en la solicitud
-          });
-        } else {
-          console.error('No se encontró la ruta del archivo Excel.');
-          reject(new Error('No se encontró la ruta del archivo Excel.')); // Rechaza la promesa si no se encuentra la ruta del archivo Excel
-        }
-      };
-      reader.onerror = reject;
+      if (!response.ok) {
+        throw new Error('Error en la solicitud');
+      }
+
+      const data = await response.json();
+      console.log(data); // Puedes manejar la respuesta de la API aquí si es necesario
+      alert('Guardado con éxito');
+    };
       reader.readAsDataURL(image);
-    });
+    } catch (error) {
+      console.error('Error al enviar el PDF a la API:', error);
+      alert('Error al enviar el PDF a la API');
+    }
   };
 
   const openModal = (group: { name: string, images: File[] }) => {

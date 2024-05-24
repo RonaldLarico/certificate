@@ -3,42 +3,53 @@ import * as path from "path";
 import { NextResponse } from "next/server";
 
 interface RequestBody {
-  emailService: string;
-  file: string;
-  fileName: string;
-  rutaArchivoExcel: string; // Nueva propiedad para recibir la ruta del archivo Excel
+  groupName: string;
+  index: number;
+  pdfBase64: string;
+  rutaArchivoExcel: string;
 }
 
 export async function POST(req: { json: () => Promise<RequestBody> }) {
   try {
-    const { emailService, file, fileName, rutaArchivoExcel } = await req.json();
+    const { groupName, index, pdfBase64, rutaArchivoExcel } = await req.json();
 
-    // Send with gmail & Nodemailer
-    if (emailService === "gmail") {
-      const decodedFile = Buffer.from(file, "base64");
-      const folderPath = rutaArchivoExcel; // Utiliza la ruta del archivo Excel proporcionada por el cliente
-
-      if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
-      }
-
-      const newFolderName = 'Modulos';
-      const newFolderPath = path.join(folderPath, newFolderName);
-
-      if (!fs.existsSync(newFolderPath)) {
-        fs.mkdirSync(newFolderPath);
-      }
-
-      const filePath = path.join(newFolderPath, fileName);
-      fs.writeFileSync(filePath, decodedFile);
-
-      return NextResponse.json(
-        { message: "Archivo guardado con éxito", fileName: filePath },
-        { status: 200 }
-      );
+    if (!rutaArchivoExcel) {
+      throw new Error('La ruta del archivo Excel no está definida.');
     }
 
+    // Decodificar el archivo PDF base64
+    const decodedFile = Buffer.from(pdfBase64.split(";base64,").pop()!, "base64");
+
+    // Definir la ruta donde se guardará el archivo PDF
+    const folderPath = rutaArchivoExcel; // Utiliza la ruta del archivo Excel proporcionada por el cliente
+
+    // Crear directorios si no existen
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    const newFolderName = 'Modulos';
+    const newFolderPath = path.join(folderPath, newFolderName);
+
+    if (!fs.existsSync(newFolderPath)) {
+      fs.mkdirSync(newFolderPath, { recursive: true });
+    }
+
+    // Definir la ruta completa del archivo PDF
+    const fileName = `${groupName}_${index + 1}.pdf`;
+    const filePath = path.join(newFolderPath, fileName);
+
+    // Guardar el archivo PDF en el sistema de archivos
+    fs.writeFileSync(filePath, decodedFile);
+
+    // Devolver una respuesta exitosa con el nombre del archivo guardado
+    return NextResponse.json(
+      { message: "Archivo guardado con éxito", fileName: filePath },
+      { status: 200 }
+    );
   } catch (error) {
+    console.error('Error en el procesamiento del archivo PDF:', error);
+    // Devolver un error en caso de fallo en el proceso
     return NextResponse.json(
       { message: "Falló el guardado de archivos" },
       { status: 500 }
