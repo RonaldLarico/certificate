@@ -24,7 +24,12 @@ const ExcelDataFrom = () => {
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [excelLoaded, setExcelLoaded] = useState(false);
+  const [conversionInProgress, setConversionInProgress] = useState(false);
+  const [nextButtonText, setNextButtonText] = useState("Siguiente");
 
+const handleConversionProgress = (progress: boolean) => {
+  setConversionInProgress(progress);
+};
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -40,9 +45,10 @@ const ExcelDataFrom = () => {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
       // Obtén la ruta del archivo seleccionado
-      const filePath = event.target.value;
+      const filePath = eventFiles[0].path;
       // Guarda la ruta en el localStorage
-      localStorage.setItem('excelFilePath', filePath);
+      sessionStorage.setItem('excelFilePath', filePath);
+      console.log('Folder path:', filePath);
       const updatedImagesAndExcel = newExcelFiles.map((file, index) => {
         console.log(`Excel file ${file.name} is related to imageId ${index}`);
         return {
@@ -126,6 +132,7 @@ const ExcelDataFrom = () => {
               <ImageUploader
                 numModules={numModules}
                 excelData={imagesAndExcel.map(item => item.excelData).filter(excelData => excelData !== null) as ExcelData[]}
+                onConversionProgress={handleConversionProgress}
               />
             </div>
           )}
@@ -147,8 +154,11 @@ const ExcelDataFrom = () => {
           ))}
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
           <Link href="/pdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
-            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded ? 'opacity-50' : ''}`}>Siguiente</button>
-          </Link>
+  <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || conversionInProgress ? 'opacity-50' : ''}`}>
+    {conversionInProgress ? "Convirtiendo..." : nextButtonText}
+  </button>
+</Link>
+
 
         </div>
       </div>

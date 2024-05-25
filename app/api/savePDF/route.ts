@@ -6,14 +6,14 @@ interface RequestBody {
   groupName: string;
   index: number;
   pdfBase64: string;
-  rutaArchivoExcel: string;
+  routeExcel: string;
 }
 
 export async function POST(req: { json: () => Promise<RequestBody> }) {
   try {
-    const { groupName, index, pdfBase64, rutaArchivoExcel } = await req.json();
+    const { groupName, index, pdfBase64, routeExcel } = await req.json();
 
-    if (!rutaArchivoExcel) {
+    if (!routeExcel) {
       throw new Error('La ruta del archivo Excel no está definida.');
     }
 
@@ -21,14 +21,14 @@ export async function POST(req: { json: () => Promise<RequestBody> }) {
     const decodedFile = Buffer.from(pdfBase64.split(";base64,").pop()!, "base64");
 
     // Definir la ruta donde se guardará el archivo PDF
-    const folderPath = rutaArchivoExcel; // Utiliza la ruta del archivo Excel proporcionada por el cliente
+    const folderPath = routeExcel; // Utiliza la ruta del archivo Excel proporcionada por el cliente
 
     // Crear directorios si no existen
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
 
-    const newFolderName = 'Modulos';
+    const newFolderName = `Modulos/${groupName}`;
     const newFolderPath = path.join(folderPath, newFolderName);
 
     if (!fs.existsSync(newFolderPath)) {

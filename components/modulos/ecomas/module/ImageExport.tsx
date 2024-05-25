@@ -9,9 +9,9 @@ const ImageExport = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentGroup, setCurrentGroup] = useState<{ name: string, images: File[] } | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [convertedGroups, setConvertedGroups] = useState<string[]>([]);
   const [conversionInProgress, setConversionInProgress] = useState(false);
-  const [excelFilePath, setExcelFilePath] = useState<string | null>(null);
+  const [saveButtonText, setSaveButtonText] = useState('Guardar PDF');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     const getImagesFromDB = async () => {
@@ -49,9 +49,6 @@ const ImageExport = () => {
       }
     };
     getImagesFromDB();
-    // Obtener la ruta del archivo Excel del localStorage
-    const rutaArchivoExcel = localStorage.getItem('excelFilePath');
-    setExcelFilePath(rutaArchivoExcel); // Establecer la ruta en el estado
   }, []);
 
   const convertGroupToPDF = async (group: { name: string, images: File[] }) => {
@@ -60,6 +57,11 @@ const ImageExport = () => {
       await convertImageToPDF(group.images[i], group.name, i);
     }
     setConversionInProgress(false);
+    setSaveButtonText('Guardado');
+    if (!saveSuccess) { // Solo mostrar el mensaje de éxito si aún no se ha mostrado
+      setSaveSuccess(true);
+      alert(`Guardado con éxito '${group.name}'`);
+    }
   };
 
   const convertAllToPDF = async () => {
@@ -79,9 +81,22 @@ const ImageExport = () => {
       reader.onload = async () => {
         const imgData = reader.result as string;
         pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-        /* const fileName = `${groupName}_${index + 1}.pdf`;
-        pdf.save(fileName.replace('.jpeg', '')); */
-  
+        // Obtener la ruta del archivo Excel del almacenamiento local
+        let routeExcel;
+        const excelFilePath = sessionStorage.getItem('excelFilePath');
+        if (excelFilePath !== null) {
+          routeExcel = excelFilePath.replace(/\\/g, '/').replace(/\/[^/]*$/, "");
+          console.log(routeExcel);
+        } else {
+          console.log("La ruta del archivo Excel no está definida en el almacenamiento local.");
+          return; // Salir de la función si no se encuentra la ruta del archivo Excel
+        }
+      console.log("rutaaaaaaaa", routeExcel);
+        // Verificar si la ruta del archivo Excel está definida
+        if (!excelFilePath) {
+          console.error('La ruta del archivo Excel no está definida en el almacenamiento local');
+          return;
+        }
         // Convertir el PDF a una cadena Base64
         const pdfBase64 = pdf.output('datauristring');
         // Crear el objeto JSON con los datos del PDF
@@ -89,7 +104,7 @@ const ImageExport = () => {
           groupName,
           index,
           pdfBase64,
-          rutaArcivoExcel: excelFilePath
+          routeExcel,
         };
         // Enviar el objeto JSON a la API
       const response = await fetch("../api/savePDF", {
@@ -99,14 +114,8 @@ const ImageExport = () => {
         },
         body: JSON.stringify(pdfData)
       });
-
-      if (!response.ok) {
-        throw new Error('Error en la solicitud');
-      }
-
       const data = await response.json();
-      console.log(data); // Puedes manejar la respuesta de la API aquí si es necesario
-      alert('Guardado con éxito');
+      console.log(data);
     };
       reader.readAsDataURL(image);
     } catch (error) {
@@ -161,7 +170,6 @@ const ImageExport = () => {
             </div>
             <div className='gap-10'>
               <button onClick={() => openModal(group)} className='mr-10'>Ver</button>
-              <button onClick={() => convertGroupToPDF(group)}>Convertir a PDF</button>
             </div>
             <div className="image-grid mb-5">
               {group.images.map((image, index) => (
@@ -172,11 +180,11 @@ const ImageExport = () => {
             </div>
           </div>
         ))}
-        <button onClick={() => convertAllToPDF()} disabled={conversionInProgress} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">
-          {conversionInProgress ? 'Convirtiendo...' : 'Convertir todo a PDF'}
-        </button>
         <button onClick={() => window.history.back()} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">Atrás</button>
         <button onClick={deleteImagesFromDB}>Eliminar imágenes</button>
+        <button onClick={() => convertAllToPDF()} disabled={conversionInProgress} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">
+          {conversionInProgress ? 'Guardando...' : saveButtonText}
+        </button>
         {currentGroup && (
           <Modal onClose={closeModal}>
             <div className="modal-buttons" style={{ textAlign: 'center' }}>

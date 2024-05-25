@@ -18,9 +18,10 @@ interface ExcelData {
 interface ImageUploaderProps {
   numModules: number;
   excelData: ExcelData[] | null;
+  onConversionProgress?: (progress: boolean) => void;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData, onConversionProgress }) => {
 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
@@ -133,6 +134,9 @@ const getNumberFromFileName = (fileName: string): number => {
   const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
 
   const drawCanvas = async (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
+    if (onConversionProgress) {
+      onConversionProgress(true);
+    }
     if (!convertedImageIndexes.includes(dataIndex)) {
       setConvertedImageIndexes(prevIndexes => [...prevIndexes, dataIndex]);
     const ctx = canvas.getContext('2d');
@@ -231,6 +235,9 @@ const getNumberFromFileName = (fileName: string): number => {
           }
         }
       };
+    }
+    if (onConversionProgress) {
+      onConversionProgress(false);
     }
   };
 };

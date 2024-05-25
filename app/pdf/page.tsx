@@ -1,4 +1,4 @@
-import ImageExport from '@/components/ImageExport'
+import ImageExport from '@/components/modulos/ecomas/module/ImageExport'
 import React from 'react'
 
 const Pdf = () => {
