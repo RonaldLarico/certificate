@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { openDatabase } from '@/components/modulos/ecomas/database/index';
 import jsPDF from 'jspdf';
-import Modal from '@/components/share/Modal';
+import Modal from '@/components/modulos/share/Modal';
 
 const ImageExport = () => {
   const [imageGroups, setImageGroups] = useState<{ name: string, images: File[] }[]>([]);
@@ -72,6 +72,41 @@ const ImageExport = () => {
     setConversionInProgress(false);
   };
 
+  const convertImagePDFEmail = async (image: File, groupName: string, index: number) => {
+    try {
+      const pdf = new jsPDF({
+        orientation: 'landscape'
+      });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const imgData = reader.result as string;
+        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        // Convertir el PDF a una cadena Base64
+        const pdfBase64 = pdf.output('datauristring');
+        // Crear el objeto JSON con los datos del PDF
+        const pdfData = {
+          groupName,
+          index,
+          pdfBase64,
+        };
+        // Enviar el objeto JSON a la API para enviar por correo
+        const response = await fetch("../api/apiMail", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(pdfData)
+        });
+        const data = await response.json();
+        console.log(data);
+      };
+      reader.readAsDataURL(image);
+    } catch (error) {
+      console.error('Error al enviar el PDF por correo:', error);
+      alert('Error al enviar el PDF por correo');
+    }
+  };
+
   const convertImageToPDF = async (image: File, groupName: string, index: number) => {
     try {
       const pdf = new jsPDF({
@@ -107,7 +142,7 @@ const ImageExport = () => {
           routeExcel,
         };
         // Enviar el objeto JSON a la API
-      const response = await fetch("../api/savePDF", {
+      const response = await fetch("../api/apiPdf", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -170,6 +205,7 @@ const ImageExport = () => {
             </div>
             <div className='gap-10'>
               <button onClick={() => openModal(group)} className='mr-10'>Ver</button>
+              <button onClick={() => convertImagePDFEmail}>Enviar</button>
             </div>
             <div className="image-grid mb-5">
               {group.images.map((image, index) => (
@@ -204,6 +240,3 @@ const ImageExport = () => {
 };
 
 export default ImageExport;
-
-
-

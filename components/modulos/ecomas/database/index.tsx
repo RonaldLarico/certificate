@@ -1,9 +1,9 @@
-let db: IDBDatabase | null = null; // Variable para almacenar la instancia de la base de datos
+
+let db: IDBDatabase | null = null;
 
 export const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise<IDBDatabase>((resolve, reject) => {
     if (db) {
-      // Si la base de datos ya está abierta, resolvemos con la instancia existente
       resolve(db);
     } else {
       const request = window.indexedDB.open('ImageDatabaseEcomas', 2);

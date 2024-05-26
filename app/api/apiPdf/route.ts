@@ -10,9 +10,9 @@ interface RequestBody {
 }
 
 export async function POST(req: { json: () => Promise<RequestBody> }) {
+
   try {
     const { groupName, index, pdfBase64, routeExcel } = await req.json();
-
     if (!routeExcel) {
       throw new Error('La ruta del archivo Excel no está definida.');
     }
@@ -27,10 +27,8 @@ export async function POST(req: { json: () => Promise<RequestBody> }) {
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
-
     const newFolderName = `Modulos/${groupName}`;
     const newFolderPath = path.join(folderPath, newFolderName);
-
     if (!fs.existsSync(newFolderPath)) {
       fs.mkdirSync(newFolderPath, { recursive: true });
     }

@@ -15,6 +15,7 @@ interface ExcelData {
   temario: string | null;
   ponente: string | null;
   horas: string | null;
+  materiales: string | null;
 }
 
 const ExcelDataFrom = () => {
@@ -27,9 +28,14 @@ const ExcelDataFrom = () => {
   const [conversionInProgress, setConversionInProgress] = useState(false);
   const [nextButtonText, setNextButtonText] = useState("Siguiente");
 
-const handleConversionProgress = (progress: boolean) => {
-  setConversionInProgress(progress);
-};
+  const handleConversionProgress = (progress: boolean) => {
+    setConversionInProgress(progress);
+    if (progress) {
+      setNextButtonText("Dibujando...");
+    } else {
+      setNextButtonText("Siguiente");
+    }
+  };
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -82,7 +88,8 @@ const handleConversionProgress = (progress: boolean) => {
         const temario = sheet['B4'] ? sheet['B4'].v : null;
         const ponente = sheet['B5'] ? sheet['B5'].v : null;
         const horas = sheet['B6'] ? sheet['B6'].v : null;
-        resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas});
+        const materiales = sheet['B9'] ? sheet['B9'].v : null;
+        resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas, materiales});
       };
       reader.onerror = (error) => {
         reject(error);
@@ -132,7 +139,6 @@ const handleConversionProgress = (progress: boolean) => {
               <ImageUploader
                 numModules={numModules}
                 excelData={imagesAndExcel.map(item => item.excelData).filter(excelData => excelData !== null) as ExcelData[]}
-                onConversionProgress={handleConversionProgress}
               />
             </div>
           )}
@@ -154,10 +160,10 @@ const handleConversionProgress = (progress: boolean) => {
           ))}
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
           <Link href="/pdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
-  <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || conversionInProgress ? 'opacity-50' : ''}`}>
-    {conversionInProgress ? "Convirtiendo..." : nextButtonText}
-  </button>
-</Link>
+            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || conversionInProgress ? 'opacity-50' : ''}`}>
+              {conversionInProgress ? "Dibujando..." : nextButtonText}
+            </button>
+          </Link>
 
 
         </div>

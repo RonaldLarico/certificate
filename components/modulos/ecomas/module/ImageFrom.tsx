@@ -18,14 +18,14 @@ interface ExcelData {
 interface ImageUploaderProps {
   numModules: number;
   excelData: ExcelData[] | null;
-  onConversionProgress?: (progress: boolean) => void;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData, onConversionProgress }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) => {
 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [drawnImagesList, setDrawnImagesList] = useState<JSX.Element[]>([]);
+  console.log("correooooo", excelData)
 
   useEffect(() => {
     const getStoredImages = async () => {
@@ -134,9 +134,6 @@ const getNumberFromFileName = (fileName: string): number => {
   const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
 
   const drawCanvas = async (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
-    if (onConversionProgress) {
-      onConversionProgress(true);
-    }
     if (!convertedImageIndexes.includes(dataIndex)) {
       setConvertedImageIndexes(prevIndexes => [...prevIndexes, dataIndex]);
     const ctx = canvas.getContext('2d');
@@ -164,7 +161,7 @@ const getNumberFromFileName = (fileName: string): number => {
           const y = canvas.height / 1.7;
           ctx.fillText("Curso-taller organizado por Ecomás Consultoria y Capacitaciones,", width, y);
           ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal},`, width, y + lineHeight);
-          ctx.fillText("con una duración de 20 horas académicas", width, y + lineHeight * 2);
+          ctx.fillText(`con una duración de ${selectedData.horas} académicas`, width, y + lineHeight * 2);
           const fontSize = 45;
           ctx.fillStyle = 'white';
           ctx.font = `${fontSize}px Arial`;
@@ -236,23 +233,35 @@ const getNumberFromFileName = (fileName: string): number => {
         }
       };
     }
-    if (onConversionProgress) {
-      onConversionProgress(false);
-    }
   };
 };
 
-  const groupedImages: { [name: string]: { dataIndex: number; arrayIndex: number }[] } = {};
+  const groupedData: { [name: string]: { dataIndex: number; arrayIndex: number; email: string }[] } = {};
     excelData && excelData.forEach((data, dataIndex) => {
       data.nombres.forEach((nombre, arrayIndex) => {
+        const email = data.email && data.email[arrayIndex] ? data.email[arrayIndex] : '';
         const key = `${nombre}_${dataIndex}_${arrayIndex}`; // Usamos una clave única para evitar duplicados
-        if (!groupedImages[nombre]) {
-          groupedImages[nombre] = [{ dataIndex, arrayIndex }];
+        if (!groupedData[nombre]) {
+          groupedData[nombre] = [{ dataIndex, arrayIndex, email: data.email[arrayIndex] }];
         } else {
-          groupedImages[nombre].push({ dataIndex, arrayIndex });
+          groupedData[nombre].push({ dataIndex, arrayIndex, email: data.email[arrayIndex] });
       }
     });
   });
+
+  if (excelData) {
+    Object.keys(groupedData).forEach((nombreGrupo) => {
+      // Obtener el índice del correo electrónico actual para el nombre del grupo
+      const emailIndex = groupedData[nombreGrupo][0].dataIndex;
+      // Iterar sobre cada nombre del grupo y asignarle el correo electrónico correspondiente
+      groupedData[nombreGrupo].forEach(({ dataIndex, arrayIndex }) => {
+        // Verificar si el correo electrónico está definido y asignarlo al nombre del grupo
+        if (excelData[dataIndex]?.email) {
+          excelData[dataIndex].email[arrayIndex] = excelData[emailIndex].email[arrayIndex];
+        }
+      });
+    });
+  }
 
   const groupedConvertedImages: { [name: string]: { image: File; number: number }[] } = {};
 
@@ -271,6 +280,14 @@ Object.keys(groupedConvertedImages).forEach((name) => {
   groupedConvertedImages[name].sort((a, b) => a.number - b.number);
 });
 
+/* excelData && excelData.forEach((data) => {
+  if (Array.isArray(data.nombres) && Array.isArray(data.email)) {
+    data.nombres.forEach((nombre, index) => {
+      const email = data.email[index];
+      console.log(`Nombre: ${nombre}, Email: ${email}`);
+    });
+  }
+}); */
 
   {console.log('convertedImages:', convertedImages)}
   return (
@@ -296,38 +313,18 @@ Object.keys(groupedConvertedImages).forEach((name) => {
       <button onClick={() => window.history.back()} className="mt-4 p-3 w-full bg-blue-600 text-white rounded-s-xl uppercase">Atrás</button>
       </div>
       <button onClick={handleDeleteAllImages} className='mt-4 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
-
-      {/* <h1>Imágenes Convertidas a JPEG</h1>
-    <ul>
-      {Object.keys(groupedConvertedImages).map((name, index) => (
-        <li key={index}>
-          <h3 className='text-red-500'>{name}</h3>
-          <ul>
-            {groupedConvertedImages[name].map((item, subIndex) => (
-              <li key={subIndex}>
-                 <img
-              src={URL.createObjectURL(item.image)}
-              alt={`Converted Image ${subIndex}`}
-              width={1122}
-              height={793}
-              //style={{ width: '1122px', height: '793px' }}
-            />
-                <p>{item.image.name}</p>
-              </li>
-            ))}
-          </ul>
-        </li>
-      ))}
-    </ul> */}
-
      <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
-            {excelData && Object.keys(groupedImages).map((nombre, index) => (
+            {excelData && Object.keys(groupedData).map((nombre, index, email) => (
               <div key={index} className="drawn-image-item">
                 <h3 className='text-green-600'>{nombre}</h3>
-                {groupedImages[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
+                {excelData && excelData[groupedData[nombre][0].dataIndex]?.email && (
+          <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
+        )}
+                {groupedData[nombre].map(({ dataIndex, arrayIndex, email }, subIndex) => (
                   <div key={subIndex}>
+                    {/* <p className='text-blue-500'>Email: {email}</p> */} {/* Mostrar el correo electrónico */}
                   <canvas ref={(canvas) => {
                     if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
                   }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
@@ -339,9 +336,6 @@ Object.keys(groupedConvertedImages).forEach((name) => {
           ))}
         </div>
       </div>
-
-      {/* <PDFexport drawnImagesList={drawnImagesList || []} /> */}
-
     </div>
   );
 };
