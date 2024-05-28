@@ -194,6 +194,33 @@ const ImageExport = () => {
     }
   };
 
+  const emailData = sessionStorage.getItem('emailData');
+  //console.log("Datos guardados en sessionStorage:", emailData);
+
+  const assignEmailAndGroup = (groupName: string) => {
+    // Verificar si hay datos guardados en sessionStorage
+    if (emailData) {
+      // Convertir los datos guardados de sessionStorage a objetos JavaScript
+      const emailDataArray = JSON.parse(emailData);
+      // Encontrar el objeto correspondiente al nombre de grupo
+      const groupData = emailDataArray.find((group: { nombre: string }) => group.nombre === groupName);
+      // Verificar si se encontró el grupo
+      if (groupData) {
+        // Asignar el correo y los materiales al grupo
+        console.log(`Correo asignado para ${groupName}: ${groupData.email}`);
+        console.log(`Materiales asignados para ${groupName}: ${groupData.materiales}`);
+      } else {
+        console.log(`No se encontraron datos para el grupo ${groupName}`);
+      }
+    } else {
+      console.log("No hay datos guardados en sessionStorage");
+    }
+  };
+
+// Llamar a la función para asignar correo y materiales a cada nombre de grupo
+imageGroups.forEach(group => assignEmailAndGroup(group.name));
+
+
   return (
     <div className="max-w-screen-lg mx-auto mt-40">
       <div className="">

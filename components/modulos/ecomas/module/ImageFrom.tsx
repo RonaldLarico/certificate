@@ -13,6 +13,7 @@ interface ExcelData {
   temario: string | null;
   ponente: string | null;
   horas: string | null;
+  materiales: string | null;
 }
 
 interface ImageUploaderProps {
@@ -236,20 +237,19 @@ const getNumberFromFileName = (fileName: string): number => {
   };
 };
 
-  const groupedData: { [name: string]: { dataIndex: number; arrayIndex: number; email: string }[] } = {};
+  const groupedData: { [name: string]: { dataIndex: number; arrayIndex: number }[] } = {};
     excelData && excelData.forEach((data, dataIndex) => {
       data.nombres.forEach((nombre, arrayIndex) => {
-        const email = data.email && data.email[arrayIndex] ? data.email[arrayIndex] : '';
         const key = `${nombre}_${dataIndex}_${arrayIndex}`; // Usamos una clave única para evitar duplicados
         if (!groupedData[nombre]) {
-          groupedData[nombre] = [{ dataIndex, arrayIndex, email: data.email[arrayIndex] }];
+          groupedData[nombre] = [{ dataIndex, arrayIndex  }];
         } else {
-          groupedData[nombre].push({ dataIndex, arrayIndex, email: data.email[arrayIndex] });
+          groupedData[nombre].push({ dataIndex, arrayIndex });
       }
     });
   });
 
-  if (excelData) {
+  /* if (excelData) {
     Object.keys(groupedData).forEach((nombreGrupo) => {
       // Obtener el índice del correo electrónico actual para el nombre del grupo
       const emailIndex = groupedData[nombreGrupo][0].dataIndex;
@@ -261,7 +261,7 @@ const getNumberFromFileName = (fileName: string): number => {
         }
       });
     });
-  }
+  } */
 
   const groupedConvertedImages: { [name: string]: { image: File; number: number }[] } = {};
 
@@ -280,14 +280,22 @@ Object.keys(groupedConvertedImages).forEach((name) => {
   groupedConvertedImages[name].sort((a, b) => a.number - b.number);
 });
 
-/* excelData && excelData.forEach((data) => {
-  if (Array.isArray(data.nombres) && Array.isArray(data.email)) {
-    data.nombres.forEach((nombre, index) => {
-      const email = data.email[index];
-      console.log(`Nombre: ${nombre}, Email: ${email}`);
-    });
-  }
-}); */
+if (excelData) {
+  const dataToSave: { nombre: string, email: string, materiales: string }[] = [];
+  excelData.forEach((data) => {
+    if (Array.isArray(data.nombres) && Array.isArray(data.email)) {
+      const materiales = data.materiales || ""; // Si no hay materiales, establecer un string vacío
+      data.nombres.forEach((nombre, index) => {
+        const email = data.email[index];
+        const entry = { nombre, email, materiales};
+        dataToSave.push(entry);
+        //console.log(`Nombre: ${nombre}, Email: ${email}, Materiales: ${materiales}`);
+      });
+    }
+  });
+  sessionStorage.setItem('emailData', JSON.stringify(dataToSave))
+  //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('emailData'));
+}
 
   {console.log('convertedImages:', convertedImages)}
   return (
@@ -322,7 +330,7 @@ Object.keys(groupedConvertedImages).forEach((name) => {
                 {excelData && excelData[groupedData[nombre][0].dataIndex]?.email && (
           <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
         )}
-                {groupedData[nombre].map(({ dataIndex, arrayIndex, email }, subIndex) => (
+                {groupedData[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
                   <div key={subIndex}>
                     {/* <p className='text-blue-500'>Email: {email}</p> */} {/* Mostrar el correo electrónico */}
                   <canvas ref={(canvas) => {
