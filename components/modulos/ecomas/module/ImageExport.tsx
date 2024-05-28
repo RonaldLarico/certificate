@@ -195,9 +195,9 @@ const ImageExport = () => {
   };
 
   const emailData = sessionStorage.getItem('emailData');
-  //console.log("Datos guardados en sessionStorage:", emailData);
+  console.log("Datos guardados en sessionStorage:", emailData);
 
-  const assignEmailAndGroup = (groupName: string) => {
+  const getEmailForGroup = (groupName: string) => {
     // Verificar si hay datos guardados en sessionStorage
     if (emailData) {
       // Convertir los datos guardados de sessionStorage a objetos JavaScript
@@ -206,9 +206,9 @@ const ImageExport = () => {
       const groupData = emailDataArray.find((group: { nombre: string }) => group.nombre === groupName);
       // Verificar si se encontró el grupo
       if (groupData) {
+        return groupData.email
         // Asignar el correo y los materiales al grupo
         console.log(`Correo asignado para ${groupName}: ${groupData.email}`);
-        console.log(`Materiales asignados para ${groupName}: ${groupData.materiales}`);
       } else {
         console.log(`No se encontraron datos para el grupo ${groupName}`);
       }
@@ -216,51 +216,72 @@ const ImageExport = () => {
       console.log("No hay datos guardados en sessionStorage");
     }
   };
-
 // Llamar a la función para asignar correo y materiales a cada nombre de grupo
-imageGroups.forEach(group => assignEmailAndGroup(group.name));
-
+imageGroups.forEach(group => getEmailForGroup(group.name));
 
   return (
     <div className="max-w-screen-lg mx-auto mt-40">
       <div className="">
         <h2>Imágenes guardadas en IndexedDB:</h2>
         {imageGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className='grid grid-cols-2 mx-auto '>
-            <div className="flex bg-gray-500 w-96 p-2">
-              <h3 className='text-red-500'>{group.name}</h3>
+          <div key={groupIndex} className=''>
+            <div className='gap-10 inline-flex items-center text-xl'>
+              <h3 className='w-[500px] border-2 border-blue-600 p-4 rounded-xl font-bold'>{group.name}
+                <span className="text-sm text-gray-400 ml-2">
+                  ({group.images.length} módul{group.images.length !== 1 ? 'os' : ''})
+                </span>
+              </h3>
+              <button onClick={() => openModal(group)} className='w-40 p-4 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver modulos</button>
+              <p className='w-96 border-2 border-green-600 rounded-xl p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
+              <button onClick={() => convertImagePDFEmail} className='bg-green-600 p-4 rounded-xl hover:scale-110 duration-300 font-mono'>Enviar</button>
             </div>
-            <div className='gap-10'>
-              <button onClick={() => openModal(group)} className='mr-10'>Ver</button>
-              <button onClick={() => convertImagePDFEmail}>Enviar</button>
-            </div>
-            <div className="image-grid mb-5">
+            <div className="image-grid mb-8">
               {group.images.map((image, index) => (
                 <div key={index} className="image-item">
-                  <p>{image.name}</p>
+                  {/* <p>{image.name}</p> */}
                 </div>
               ))}
             </div>
           </div>
         ))}
-        <button onClick={() => window.history.back()} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">Atrás</button>
-        <button onClick={deleteImagesFromDB}>Eliminar imágenes</button>
-        <button onClick={() => convertAllToPDF()} disabled={conversionInProgress} className="mt-4 p-2 bg-blue-600 text-white rounded-lg">
-          {conversionInProgress ? 'Guardando...' : saveButtonText}
-        </button>
-        {currentGroup && (
-          <Modal onClose={closeModal}>
-            <div className="modal-buttons" style={{ textAlign: 'center' }}>
-              <button onClick={handlePrevImage} className='text-red-600'>Anterior</button>
-              <button onClick={handleNextImage}>Siguiente</button>
-            </div>
-            <img
-              src={URL.createObjectURL(currentGroup.images[currentImageIndex])}
-              alt={`Image ${currentImageIndex}`}
-              style={{ width: '297mm', height: '210mm' }} // Tamaño A4
-            />
-          </Modal>
-        )}
+        <div className='flex justify-between text-2xl font-extrabold mb-10 mt-20'>
+          <button onClick={() => window.history.back()} className="p-4 bg-blue-600 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">Atrás</button>
+          <button onClick={() => convertAllToPDF()} disabled={conversionInProgress} className="p-4 bg-red-500 text-white rounded-e-xl w-full uppercase hover:scale-110 duration-300">
+            {conversionInProgress ? 'Guardando...' : saveButtonText}
+          </button>
+        </div>
+          <button onClick={deleteImagesFromDB} className='w-full p-4 text-2xl font-extrabold uppercase bg-red-600 mb-40 rounded-xl hover:scale-110 duration-300'>Limpiar Datos</button>
+          {currentGroup && (
+  <Modal onClose={closeModal}>
+    <div className="modal-buttons inline-flex mb-5 ml-40" style={{ textAlign: 'center' }}>
+      <button
+        onClick={handlePrevImage}
+        className={`text-gray-200 mr-5 border-2 border-blue-600 hover:bg-blue-600 px-4 py-2 rounded-xl uppercase font-extrabold text-sm hover:scale-125 duration-300${currentImageIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        Anterior
+      </button>
+      <div className="pagination flex font-extrabold">
+        {currentGroup.images.map((image, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentImageIndex(index)}
+            className={`page-btn ${index === currentImageIndex ? 'bg-gray-300 text-blue-600 rounded-xl' : 'bg-blue-600 text-gray-200'} border border-blue-600 px-4 py-2 rounded-xl`}>
+            {index + 1}
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={handleNextImage}
+        className={`text-gray-200 ml-5 border-2 border-blue-600 hover:bg-blue-600 px-4 py-2 rounded-xl uppercase font-extrabold text-sm hover:scale-125 duration-300${currentImageIndex === currentGroup.images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        Siguiente
+      </button>
+    </div>
+    <img
+      src={URL.createObjectURL(currentGroup.images[currentImageIndex])}
+      alt={`Image ${currentImageIndex}`}
+      style={{ width: '297mm', height: '210mm' }}/>
+  </Modal>
+)}
+
       </div>
     </div>
   );

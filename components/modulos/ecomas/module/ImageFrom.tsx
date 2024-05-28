@@ -13,7 +13,6 @@ interface ExcelData {
   temario: string | null;
   ponente: string | null;
   horas: string | null;
-  materiales: string | null;
 }
 
 interface ImageUploaderProps {
@@ -281,13 +280,12 @@ Object.keys(groupedConvertedImages).forEach((name) => {
 });
 
 if (excelData) {
-  const dataToSave: { nombre: string, email: string, materiales: string }[] = [];
+  const dataToSave: { nombre: string, email: string }[] = [];
   excelData.forEach((data) => {
     if (Array.isArray(data.nombres) && Array.isArray(data.email)) {
-      const materiales = data.materiales || ""; // Si no hay materiales, establecer un string vacío
       data.nombres.forEach((nombre, index) => {
         const email = data.email[index];
-        const entry = { nombre, email, materiales};
+        const entry = { nombre, email };
         dataToSave.push(entry);
         //console.log(`Nombre: ${nombre}, Email: ${email}, Materiales: ${materiales}`);
       });

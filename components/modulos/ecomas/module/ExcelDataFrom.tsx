@@ -15,7 +15,6 @@ interface ExcelData {
   temario: string | null;
   ponente: string | null;
   horas: string | null;
-  materiales: string | null;
 }
 
 const ExcelDataFrom = () => {
@@ -79,8 +78,8 @@ const ExcelDataFrom = () => {
         const temario = sheet['B4'] ? sheet['B4'].v : null;
         const ponente = sheet['B5'] ? sheet['B5'].v : null;
         const horas = sheet['B6'] ? sheet['B6'].v : null;
-        const materiales = sheet['B9'] ? sheet['B9'].v : null;
-        resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas, materiales});
+        //const materiales = sheet['B9'] ? sheet['B9'].v : null;
+        resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas });
       };
       reader.onerror = (error) => {
         reject(error);
