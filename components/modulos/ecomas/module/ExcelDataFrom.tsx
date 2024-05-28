@@ -28,15 +28,6 @@ const ExcelDataFrom = () => {
   const [conversionInProgress, setConversionInProgress] = useState(false);
   const [nextButtonText, setNextButtonText] = useState("Siguiente");
 
-  const handleConversionProgress = (progress: boolean) => {
-    setConversionInProgress(progress);
-    if (progress) {
-      setNextButtonText("Dibujando...");
-    } else {
-      setNextButtonText("Siguiente");
-    }
-  };
-
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
     setNumModules(selectedNumModules);
@@ -78,9 +69,9 @@ const ExcelDataFrom = () => {
         const sheet = workbook.Sheets[sheetName];
         const sheetData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
         const filteredData = sheetData.filter((row) => row.length > 0 && row.some((cell) => typeof cell === 'string' && cell.trim() !== ''));
-        const nombres = filteredData.slice(9).map((row: string[]) => row[0]);
-        const email = filteredData.slice(9).map((row: string[]) => row[2]);
-        const codigo = filteredData.slice(9).map((row: string[]) => row[8]);
+        const nombres = filteredData.slice(10).map((row: string[]) => row[0]);
+        const email = filteredData.slice(10).map((row: string[]) => row[2]);
+        const codigo = filteredData.slice(10).map((row: string[]) => row[8]);
         const participacion = filteredData.slice(9).map((row: string[]) => row[9]);
         const actividadAcademica = sheet['B1'] ? sheet['B1'].v : null;
         const fechaInicio = sheet['B2'] ? sheet['B2'].v : null;
