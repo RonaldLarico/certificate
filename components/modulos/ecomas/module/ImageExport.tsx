@@ -12,6 +12,9 @@ const ImageExport = () => {
   const [conversionInProgress, setConversionInProgress] = useState(false);
   const [saveButtonText, setSaveButtonText] = useState('Guardar PDF');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [sendButtonState, setSendButtonState] = useState<{ [groupName: string]: "initial" | "sending" | "sent" }>({});
+  const [allEmailsSent, setAllEmailsSent] = useState(false);
+
 
   useEffect(() => {
     const getImagesFromDB = async () => {
@@ -20,7 +23,6 @@ const ImageExport = () => {
         const transaction = db.transaction(['ImagesEcomas'], 'readonly');
         const objectStore = transaction.objectStore('ImagesEcomas');
         const storedImages: File[] = [];
-
         const cursorRequest = objectStore.openCursor();
         cursorRequest.onsuccess = function(event) {
           const cursor = (event.target as IDBRequest).result;
@@ -56,8 +58,6 @@ const ImageExport = () => {
     for (let i = 0; i < group.images.length; i++) {
       await convertImageToPDF(group.images[i], group.name, i);
     }
-    setConversionInProgress(false);
-    setSaveButtonText('Guardado');
     if (!saveSuccess) { // Solo mostrar el mensaje de éxito si aún no se ha mostrado
       setSaveSuccess(true);
       alert(`Guardado con éxito '${group.name}'`);
@@ -70,6 +70,11 @@ const ImageExport = () => {
       await convertGroupToPDF(group);
     }
     setConversionInProgress(false);
+    setSaveButtonText('Guardado');
+    if (!saveSuccess) { // Solo mostrar el mensaje de éxito si aún no se ha mostrado
+      setSaveSuccess(true);
+      alert(`Guardado con éxito`);
+    }
   };
 
   const convertImageToPDF = async (image: File, groupName: string, index: number) => {
@@ -161,6 +166,7 @@ const ImageExport = () => {
 
   const emailData = sessionStorage.getItem('emailData');
   const actividadAcademicaData = sessionStorage.getItem('actividadAcademicaData');
+  const dataString = actividadAcademicaData ? JSON.parse(actividadAcademicaData) : [];
   //console.log("Datos guardados en sessionStorage:", actividadAcademicaData);
 
   const getEmailForGroup = (groupName: string) => {
@@ -187,36 +193,40 @@ imageGroups.forEach(group => getEmailForGroup(group.name));
 
 const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => {
   try {
-    const pdf = new jsPDF({
-      orientation: 'landscape'
-    });
-    // Convertir todas las imágenes del grupo a PDF
-    for (let i = 0; i < group.images.length; i++) {
-      const image = group.images[i];
+    setSendButtonState((prevState) => ({
+      ...prevState,
+      [group.name]: 'sending'
+    }));
+    const pdfs: string[] = [];
+    // Iterar sobre cada imagen en el grupo y convertirla a PDF
+    for (const image of group.images) {
+      const pdf = new jsPDF({
+        orientation: 'landscape'
+      });
       const reader = new FileReader();
       const promise = new Promise((resolve) => {
         reader.onload = () => {
           const imgData = reader.result as string;
           pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-          if (i !== group.images.length - 1) {
-            pdf.addPage();
-          }
           resolve(undefined);
         };
       });
       reader.readAsDataURL(image);
       await promise;
+      // Convertir el PDF a una cadena Base64 y agregarlo al array de PDFs
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+      pdfs.push(pdfBase64);
     }
-    // Convertir el PDF a una cadena Base64
-    const pdfBase64 = pdf.output('datauristring');
-    // Crear el objeto JSON con los datos del PDF
+    // Crear el objeto JSON con los datos del PDF y enviarlo a la API
     const dataEmail = {
       groupName: group.name,
       email: getEmailForGroup(group.name),
-      pdfBase64,
-      actividadAcademicaData,
+      pdfBase64Array: pdfs,
+      dataString,
+      templateName: 'Ecomas',
+      user: 'ecomas.201@gmail.com',
+      pass: 'aubslrrzusgphuad'
     };
-    // Enviar el objeto JSON a la API para enviar por correo
     const response = await fetch("../api/apiMail", {
       method: "POST",
       headers: {
@@ -226,14 +236,37 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
     });
     const data = await response.json();
     console.log(data);
+    setSendButtonState(prevState => ({
+      ...prevState,
+      [group.name]: 'sent'
+    }));
   } catch (error) {
     console.error('Error al enviar el PDF por correo:', error);
     alert('Error al enviar el PDF por correo');
+    setSendButtonState(prevState => ({
+      ...prevState,
+      [group.name]: 'initial'
+    }));
+  }
+};
+
+const sendEmailToAllGroups = async () => {
+  try {
+    // Iterar sobre cada grupo de imágenes y enviar el correo electrónico
+    for (const group of imageGroups) {
+      await convertToPDFAndEmail(group);
+      // Pausa para dar tiempo entre cada envío de correo electrónico
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos
+    }
+    setAllEmailsSent(true);
+  } catch (error) {
+    console.error('Error al enviar correos electrónicos:', error);
+    alert('Error al enviar correos electrónicos');
   }
 };
 
   return (
-    <div className="max-w-screen-lg mx-auto mt-40">
+    <div className="max-w-screen-xl mx-auto mt-40">
       <div className="">
         <h2>Imágenes guardadas en IndexedDB:</h2>
         {imageGroups.map((group, groupIndex) => (
@@ -246,7 +279,12 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
               </h3>
               <button onClick={() => openModal(group)} className='w-40 p-4 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
               <p className='w-96 border-2 border-green-600 rounded-xl p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
-              <button onClick={() => convertToPDFAndEmail(group)} className='bg-green-600 p-4 rounded-xl hover:scale-110 duration-300 font-mono'>Enviar</button>
+              <button
+                onClick={() => convertToPDFAndEmail(group)}
+                disabled={sendButtonState[group.name] === 'sending' || sendButtonState[group.name] === 'sent'}
+                className={`bg-${sendButtonState[group.name] === 'sent' ? 'red' : 'green'}-600 p-4 rounded-xl hover:scale-110 duration-300 font-mono`}>
+                {sendButtonState[group.name] === 'sending' ? 'Enviando...' : (sendButtonState[group.name] === 'sent' ? 'Enviado' : 'Enviar')}
+              </button>
             </div>
             <div className="image-grid mb-8">
               {group.images.map((image, index) => (
@@ -257,13 +295,25 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
             </div>
           </div>
         ))}
-        <div className='flex justify-between text-2xl font-extrabold mb-10 mt-20'>
-          <button onClick={() => window.history.back()} className="p-4 bg-blue-600 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">Atrás</button>
-          <button onClick={() => convertAllToPDF()} disabled={conversionInProgress} className="p-4 bg-red-500 text-white rounded-e-xl w-full uppercase hover:scale-110 duration-300">
-            {conversionInProgress ? 'Guardando...' : saveButtonText}
+        <div className='flex justify-between text-2xl font-extrabold mt-20 mb-10'>
+        <button
+  onClick={() => convertAllToPDF()}
+  disabled={conversionInProgress || saveButtonText === 'Guardado'} 
+  className="p-4 bg-red-500 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300"
+>
+  {conversionInProgress ? 'Guardando...' : saveButtonText}
+</button>
+          <button
+            onClick={sendEmailToAllGroups}
+            disabled={allEmailsSent} // Deshabilitar el botón si todos los correos electrónicos ya se han enviado
+            className={`w-full text-white p-4 text-2xl font-extrabold uppercase bg-green-600 rounded-e-xl hover:scale-110 duration-300 ${allEmailsSent ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            {allEmailsSent ? 'Módulos Enviados' : 'Enviar a Email (Todos los Módulos)'}
           </button>
         </div>
-          <button onClick={deleteImagesFromDB} className='w-full text-white p-4 text-2xl font-extrabold uppercase bg-red-600 mb-40 rounded-xl hover:scale-110 duration-300'>Limpiar Datos</button>
+        <div className='flex justify-between text-2xl font-extrabold mb-40'>
+          <button onClick={() => window.history.back()} className="p-4 bg-blue-600 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">Atrás</button>
+          <button onClick={deleteImagesFromDB} className='w-full text-white p-4 text-2xl font-extrabold uppercase bg-red-600 rounded-e-xl hover:scale-110 duration-300'>Limpiar Datos</button>
+        </div>
           {currentGroup && (
             <Modal onClose={closeModal}>
               <div className='flex justify-center'>

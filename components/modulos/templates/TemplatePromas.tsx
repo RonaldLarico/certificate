@@ -15,19 +15,16 @@ import {
 import * as React from "react";
 
 interface PromasEmailTemplate {
-  name?: string;
-  message?: string;
-  curso?: string;
+  groupName?: string;
+  dataString?: string[];
 }
 
 export const PromasTemplate = ({
-  name,
-  message,
-  curso = '{CursoPromas}',
+  groupName,
+  dataString,
 }: PromasEmailTemplate) => (
   <Html>
     <Head />
-    <Preview>{curso}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Img
@@ -42,15 +39,15 @@ export const PromasTemplate = ({
             marginTop: "20px"
           }}
         />
-        <Heading style={h1}>Saludos cordiales estimado(a) participante {name}</Heading>
+        <Heading style={h1}>Saludos cordiales estimado(a) participante {groupName}</Heading>
 
         <Text style={{ ...text, marginBottom: "2px", textAlign: "justify" as const, }}>
           Es un placer para nosotros otorgarte este certificado de finalización
-          del curso de <strong>{curso}</strong> de Corporación Promas. Reconocemos tu
+          del curso de de Corporación Promas. Reconocemos tu
           dedicación y esfuerzo para completar con éxito este programa educativo.
           Adjuntamos el certificado y materiales del curso:
         </Text>
-        <pre style={code}>{message}</pre> {/* Cambio aquí */}
+        <pre style={code}>{dataString}</pre> {/* Cambio aquí */}
 
         <Section style={informationTable}>
           <Row style={informationTableRow}>

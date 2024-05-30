@@ -1,33 +1,18 @@
-import {
-  Body,
-  Container,
-  Column,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Text,
-} from "@react-email/components";
+import { Body, Container, Column, Head, Heading, Html, Img, Link, Preview, Row, Section, Text } from "@react-email/components";
 import * as React from "react";
 
 interface EcomasEmailTemplateProps {
   groupName?: string;
-  actividadAcademica?: string;
-  curso?: string;
+  dataString?: string[];
 }
 
 export const EcomasTemplate = ({
   groupName,
-  actividadAcademica,
-  curso = "{Curso Ecomas}",
+  dataString,
 }: EcomasEmailTemplateProps) => (
   <Html>
     <Head />
-    <Preview>{curso}</Preview>
+    {/* <Preview>{curso}</Preview> */}
     <Body style={main}>
       <Container style={{...container, borderRadius: "10px"}}>
         <Section style={logoContainer}>
@@ -38,19 +23,23 @@ export const EcomasTemplate = ({
             alt="ecomas"
           />
         </Section>
-        <Heading style={h1}>Saludos cordiales, {groupName}</Heading>
+        <Heading style={h1}>Estimado(a): {groupName}</Heading>
         <Text style={heroText}>
-          Nos complace otorgarte este certificado de finalización del curso de
-          <strong> {curso} </strong> 
-           de Ecomás.
+          Nos complace otorgarle estos certificados de finalización de los módulos de:
+          <br/>
+          <strong>
+            {dataString && dataString.map((item, index) => (
+              <React.Fragment key={index}>
+                {item}
+                {index !== dataString.length - 1 && <br />} {/* Agrega un salto de línea si no es el último elemento */}
+              </React.Fragment>
+            ))}
+          </strong>
+          <br/>
+          correspondientes a su diplomado llevado a cado en Ecomás Consultoria y Capacitación.
+          <br/>
           ¡Felicidades de parte de todo el equipo de Ecomás!
         </Text>
-
-        <Text style={text}>
-          También, adjuntamos los enlaces de los <strong>materiales</strong> utilizados en el curso:
-        </Text>
-        <pre style={text}>{actividadAcademica}</pre> {/* Cambio aquí */}
-
         <Section>
           <Row style={footerLogos}>
             <Column style={{ width: "66%" }}>
@@ -87,8 +76,7 @@ export const EcomasTemplate = ({
                       <Img
                         src='https://cdn-icons-png.flaticon.com/128/5968/5968764.png'
                         height="28"
-                        alt="ecomas"
-                      />                    
+                        alt="ecomas"/>
                       </Link>
                   </Column>
                   <Column>
@@ -96,8 +84,7 @@ export const EcomasTemplate = ({
                       <Img
                         src='https://cdn-icons-png.flaticon.com/128/5968/5968809.png'
                         height="25"
-                        alt="ecomas"
-                      />                    
+                        alt="ecomas"/>
                       </Link>
                   </Column>
                 </Row>
@@ -111,26 +98,22 @@ export const EcomasTemplate = ({
             style={footerLink}
             href="https://ecomas.pe"
             target="_blank"
-            rel="noopener noreferrer"
-          >
-            Visítanos en ecomas.pe
+            rel="noopener noreferrer">
+            Visítanos en www.ecomas.pe
           </Link>
           &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
           <Link
             style={footerLink}
             href="https://api.whatsapp.com/send/?phone=51921818181&text&type=phone_number&app_absent=0"
             target="_blank"
-            rel="noopener noreferrer"
-          >
+            rel="noopener noreferrer">
             921818181
           </Link>
           &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
           <Link
             style={footerLink}
-
             target="_blank"
-            rel="noopener noreferrer"
-          >
+            rel="noopener noreferrer">
             Jr, Lambayeque N° 1014, Juliaca 21001
           </Link>
 
@@ -194,15 +177,17 @@ const container = {
 
 const logoContainer = {
   marginTop: "32px",
+  display: "flez",
+  justifyContent: "center",
 };
 
 const h1 = {
   color: "#1d1c1d",
-  fontSize: "25px",
+  fontSize: "18px",
   fontWeight: "700",
   margin: "20px 0",
   padding: "0",
-  lineHeight: "42px",
+  lineHeight: "15px",
 };
 
 const heroText = {
