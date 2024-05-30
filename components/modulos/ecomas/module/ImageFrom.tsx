@@ -248,20 +248,6 @@ const getNumberFromFileName = (fileName: string): number => {
     });
   });
 
-  /* if (excelData) {
-    Object.keys(groupedData).forEach((nombreGrupo) => {
-      // Obtener el índice del correo electrónico actual para el nombre del grupo
-      const emailIndex = groupedData[nombreGrupo][0].dataIndex;
-      // Iterar sobre cada nombre del grupo y asignarle el correo electrónico correspondiente
-      groupedData[nombreGrupo].forEach(({ dataIndex, arrayIndex }) => {
-        // Verificar si el correo electrónico está definido y asignarlo al nombre del grupo
-        if (excelData[dataIndex]?.email) {
-          excelData[dataIndex].email[arrayIndex] = excelData[emailIndex].email[arrayIndex];
-        }
-      });
-    });
-  } */
-
   const groupedConvertedImages: { [name: string]: { image: File; number: number }[] } = {};
 
 // Iterar sobre las imágenes convertidas y agruparlas por nombre
@@ -293,6 +279,19 @@ if (excelData) {
   });
   sessionStorage.setItem('emailData', JSON.stringify(dataToSave))
   //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('emailData'));
+}
+
+if (excelData) {
+  const actividadAcademicaData: string[] = [];
+  excelData.forEach((data) => {
+    const actividadAcademica = data.actividadAcademica;
+    if (actividadAcademica) {
+      actividadAcademicaData.push(actividadAcademica);
+      //console.log(`moduloooo: ${actividadAcademica}`)
+    }
+  });
+  sessionStorage.setItem('actividadAcademicaData', JSON.stringify(actividadAcademicaData));
+  //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('actividadAcademicaData'));
 }
 
   {console.log('convertedImages:', convertedImages)}

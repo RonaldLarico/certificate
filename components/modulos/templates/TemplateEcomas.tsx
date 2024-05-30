@@ -15,14 +15,14 @@ import {
 import * as React from "react";
 
 interface EcomasEmailTemplateProps {
-  name?: string;
-  message?: string;
+  groupName?: string;
+  actividadAcademica?: string;
   curso?: string;
 }
 
 export const EcomasTemplate = ({
-  name,
-  message,
+  groupName,
+  actividadAcademica,
   curso = "{Curso Ecomas}",
 }: EcomasEmailTemplateProps) => (
   <Html>
@@ -38,7 +38,7 @@ export const EcomasTemplate = ({
             alt="ecomas"
           />
         </Section>
-        <Heading style={h1}>Saludos cordiales, {name}</Heading>
+        <Heading style={h1}>Saludos cordiales, {groupName}</Heading>
         <Text style={heroText}>
           Nos complace otorgarte este certificado de finalización del curso de
           <strong> {curso} </strong> 
@@ -49,7 +49,7 @@ export const EcomasTemplate = ({
         <Text style={text}>
           También, adjuntamos los enlaces de los <strong>materiales</strong> utilizados en el curso:
         </Text>
-        <pre style={text}>{message}</pre> {/* Cambio aquí */}
+        <pre style={text}>{actividadAcademica}</pre> {/* Cambio aquí */}
 
         <Section>
           <Row style={footerLogos}>
