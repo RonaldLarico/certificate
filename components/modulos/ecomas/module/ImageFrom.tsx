@@ -25,6 +25,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [imagesToShow, setImagesToShow] = useState<File[]>([]);
   const [imageTexts, setImageTexts] = useState<string[]>([]);
   const [drawnImagesList, setDrawnImagesList] = useState<JSX.Element[]>([]);
+  const [convertedImages, setConvertedImages] = useState<File[]>([]);
+  const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
   console.log("correooooo", excelData)
 
   useEffect(() => {
@@ -130,8 +132,6 @@ const getNumberFromFileName = (fileName: string): number => {
       console.error('Error al abrir la base de datosdddddddddddd:', error);
     }
   };
-  const [convertedImages, setConvertedImages] = useState<File[]>([]);
-  const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
 
   const drawCanvas = async (canvas: HTMLCanvasElement, data: ExcelData, dataIndex: number, arrayIndex: number) => {
     if (!convertedImageIndexes.includes(dataIndex)) {
@@ -253,12 +253,12 @@ const getNumberFromFileName = (fileName: string): number => {
 // Iterar sobre las imágenes convertidas y agruparlas por nombre
 convertedImages.forEach((image) => {
   const imageNameParts = image.name.split('_');
-  const imageName = imageNameParts[0]; // Obtener el nombre de la imagen ignorando el número
-  const imageNumber = parseInt(imageNameParts[1]); // Obtener el número de la imagen
+  const imageName = imageNameParts[0];
+  const imageNumber = parseInt(imageNameParts[1]);
   if (!groupedConvertedImages[imageName]) {
-    groupedConvertedImages[imageName] = [{ image, number: imageNumber }]; // Crear un nuevo grupo si no existe
+    groupedConvertedImages[imageName] = [{ image, number: imageNumber }];
   } else {
-    groupedConvertedImages[imageName].push({ image, number: imageNumber }); // Agregar la imagen al grupo correspondiente
+    groupedConvertedImages[imageName].push({ image, number: imageNumber });
   }
 });
 Object.keys(groupedConvertedImages).forEach((name) => {
@@ -294,6 +294,17 @@ if (excelData) {
   //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('actividadAcademicaData'));
 }
 
+useEffect(() => {
+  excelData && Object.keys(groupedData).forEach((nombre, index) => {
+    groupedData[nombre].forEach(({ dataIndex, arrayIndex }) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1122;
+      canvas.height = 793;
+      if (excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
+    });
+  });
+}, [excelData]);
+
   {console.log('convertedImages:', convertedImages)}
   return (
     <div>
@@ -314,22 +325,21 @@ if (excelData) {
       ))}
       <p className=''>Archivos de imagenes mostrados: {numModules}</p>
       <div className="font-extrabold text-xl hover:scale-110 duration-300">
-      {/* <button onClick={handleShowDrawnImages} className='mt-4 p-2 bg-blue-600 text-white rounded-lg'>Mostrar Imágenes Dibujadas</button> */}
       <button onClick={() => window.history.back()} className="mt-4 p-3 w-full bg-blue-600 text-white rounded-s-xl uppercase">Atrás</button>
       </div>
-      <button onClick={handleDeleteAllImages} className='mt-4 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
-     <div className="drawn-image-list-container">
+      <button onClick={handleDeleteAllImages} className='mt-5 mb-20 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
+
+     {/* <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
             {excelData && Object.keys(groupedData).map((nombre, index, email) => (
               <div key={index} className="drawn-image-item">
                 <h3 className='text-green-600'>{nombre}</h3>
                 {excelData && excelData[groupedData[nombre][0].dataIndex]?.email && (
-          <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
-        )}
+                  <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
+                )}
                 {groupedData[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
                   <div key={subIndex}>
-                    {/* <p className='text-blue-500'>Email: {email}</p> */} {/* Mostrar el correo electrónico */}
                   <canvas ref={(canvas) => {
                     if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
                   }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
@@ -340,7 +350,8 @@ if (excelData) {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
+
     </div>
   );
 };

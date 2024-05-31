@@ -26,6 +26,7 @@ const ExcelDataFrom = () => {
   const [excelLoaded, setExcelLoaded] = useState(false);
   const [conversionInProgress, setConversionInProgress] = useState(false);
   const [nextButtonText, setNextButtonText] = useState("Siguiente");
+  const [buttonDisabled, setButtonDisabled] = useState(true);
 
   const handleModuleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedNumModules = parseInt(event.target.value);
@@ -40,9 +41,7 @@ const ExcelDataFrom = () => {
     if (eventFiles && eventFiles.length > 0) {
       const newExcelFiles = Array.from(eventFiles).slice(0, numModules);
       setExcelFiles(newExcelFiles);
-      // Obtén la ruta del archivo seleccionado
       const filePath = eventFiles[0].path;
-      // Guarda la ruta en el localStorage
       sessionStorage.setItem('excelFilePath', filePath);
       console.log('Folder path:', filePath);
       const updatedImagesAndExcel = newExcelFiles.map((file, index) => {
@@ -55,6 +54,8 @@ const ExcelDataFrom = () => {
       });
       setImagesAndExcel(updatedImagesAndExcel);
       setExcelLoaded(true);
+      setButtonDisabled(true); // Desactivar el botón cuando se cargan nuevos archivos excel
+    setNextButtonText("Dibujando...");
     }
   };
 
@@ -96,10 +97,15 @@ const ExcelDataFrom = () => {
         excelData: await extractExcelData(file),
       })));
       setImagesAndExcel(updatedImagesAndExcel);
-    };
-    if (excelFiles.length > 0) {
-      updateImagesAndExcel();
-    }
+     // Habilitar el botón y cambiar el texto después de 20 segundos
+     setTimeout(() => {
+      setNextButtonText("Siguiente");
+      setButtonDisabled(false);
+    }, 15000);
+  };
+  if (excelFiles.length > 0) {
+    updateImagesAndExcel();
+  }
   }, [excelFiles, imageFiles]);
 
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
@@ -149,13 +155,11 @@ const ExcelDataFrom = () => {
             </div>
           ))}
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
-          <Link href="/pdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
-            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || conversionInProgress ? 'opacity-50' : ''}`}>
-              {conversionInProgress ? "Dibujando..." : nextButtonText}
+          <Link href="/moduleExport" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
+              {nextButtonText}
             </button>
           </Link>
-
-
         </div>
       </div>
     </section>

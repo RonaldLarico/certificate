@@ -9,5 +9,5 @@ const Modules = () => {
   )
 }
 
-export default Modules
+export default Modules;
 

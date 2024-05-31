@@ -7,7 +7,7 @@ const RoutesModules = () => {
       <div className="grid grid-cols-2 gap-96">
 
         <div className='uppercase font-extrabold text-2xl text-gray-100'>
-          <Link href="/modulos" className="text-center">
+          <Link href="/module" className="text-center">
             <div className="bg-blue-500 py-4 px-20 rounded-xl max-w-xs mx-auto text-center mb-20 hover:scale-125 duration-300">
                 Ecomás
             </div>

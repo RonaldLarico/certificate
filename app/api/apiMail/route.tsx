@@ -71,9 +71,7 @@ export async function POST(req: { json: () => Promise<RequestBody> }): Promise<N
         throw new Error('Invalid group name');
     }
 
-    // Render the email HTML based on the type
     const emailHtml: string = render(emailComponent);
-
     const mailOption: MailOptions = {
       from: user,
       to: email,
@@ -82,17 +80,13 @@ export async function POST(req: { json: () => Promise<RequestBody> }): Promise<N
       user: user,
       pass: pass,
     };
-    console.log('Mail options:', mailOption);
 
-    // Attach PDF file
     const attachment = pdfBase64Array.map((pdfBase64, index) => ({
       filename: `${groupName}_${index}.pdf`,
       content: Buffer.from(pdfBase64, "base64"),
     }));
     mailOption.attachments = attachment;
-
     await transporter.sendMail(mailOption);
-
     return NextResponse.json(
       { message: "Email Sent Successfully" },
       { status: 200 }
