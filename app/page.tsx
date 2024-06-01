@@ -13,7 +13,7 @@ export default function Home() {
           <Link href="/" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
             Cursos
           </Link>
-          <Link href="/routesModules" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
+          <Link href="/routeModules" className="border-2 border-blue-500 py-4 px-10 rounded-xl hover:scale-125 duration-300">
             Módulos
           </Link>
         </div>

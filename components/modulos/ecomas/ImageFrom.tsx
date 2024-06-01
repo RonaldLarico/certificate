@@ -27,6 +27,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [drawnImagesList, setDrawnImagesList] = useState<JSX.Element[]>([]);
   const [convertedImages, setConvertedImages] = useState<File[]>([]);
   const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
   console.log("correooooo", excelData)
 
   useEffect(() => {
@@ -44,6 +45,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
           }
         };
         setImagesToShow(storedImages);
+        setImagesLoaded(storedImages.length > 0);
       } catch (error) {
         console.error('Error al abrir la base de datossssssssssssss:', error);
       }
@@ -68,7 +70,8 @@ const getNumberFromFileName = (fileName: string): number => {
     return match ? parseInt(match[0]) : Infinity;
 };
 
-  const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
+const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
+  if (!imagesLoaded) {
     const files = event.target.files;
     if (files) {
       const selectedFiles = Array.from(files).slice(0, numModules);
@@ -76,8 +79,10 @@ const getNumberFromFileName = (fileName: string): number => {
       setImageTexts(texts);
       saveImages(selectedFiles);
       setImagesToShow(selectedFiles)
+      setImagesLoaded(true);
     }
   };
+};
 
   const saveImages = async (images: File[]) => {
     try {
@@ -124,6 +129,7 @@ const getNumberFromFileName = (fileName: string): number => {
       request.onsuccess = () => {
         console.log('Todas las imágenes eliminadas correctamente.');
         setImagesToShow([]);
+        setImagesLoaded(false);
       };
       request.onerror = (event) => {
         console.error('Error al eliminar las imágenes:', (event.target as IDBRequest).error);
@@ -305,17 +311,17 @@ useEffect(() => {
   });
 }, [excelData]);
 
-  {console.log('convertedImages:', convertedImages)}
+  //{console.log('convertedImages:', convertedImages)}
   return (
     <div>
       <h1 className='mb-10 text-center p-4 font-bold text-xl bg-blue-500 text-white rounded-s-xl'>Cargar imagenes ({numModules})</h1>
       <div className='flex justify-center image-container relative mb-10 text-white font-mono'>
-        <input type='file' accept="image/*" onChange={handleImage} multiple className='p-4 rounded-xl bg-blue-500 cursor-pointer hover:scale-110 duration-300'/>
+        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl bg-blue-500 cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
       </div>
       {imagesToShow.map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
-            <div className='border-2 border-blue-500 p-2 w-full mr-10 rounded-lg'>
+            <div className='border-2 border-blue-500 p-2 w-full mr-10 rounded-lg font-bold'>
               <p className='text-blue-500'>{file.name}</p>
             </div>
           )}

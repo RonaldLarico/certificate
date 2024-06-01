@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import ImageUploader from './ImageFrom';
+import ImageUploader from '@/components/modulos/ecomas/ImageFrom';
 import Link from 'next/link';
 
 interface ExcelData {
@@ -55,7 +55,7 @@ const ExcelDataFrom = () => {
       setImagesAndExcel(updatedImagesAndExcel);
       setExcelLoaded(true);
       setButtonDisabled(true); // Desactivar el botón cuando se cargan nuevos archivos excel
-    setNextButtonText("Dibujando...");
+      setNextButtonText("Dibujando...");
     }
   };
 
@@ -114,18 +114,18 @@ const ExcelDataFrom = () => {
     <section className=''>
       <h1 className='mt-5 ml-5'>Módulares/Ecomás</h1>
       <div className='flex justify-center items-center mt-10 gap-6 p-8 bg-blue-600'>
-        <h1 className='text-4xl font-extrabold text-white'>Número de módulos</h1>
+        <h1 className='text-5xl font-extrabold text-white'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>
           <div className='relative'>
-            <select {...{ required: true }} name='country' className="bg-gray-100 border-2 border-gray-300 text-gray-600 text-3xl rounded-lg ps-5 p-1 font-bold" onChange={handleModuleChange}>
+            <select {...{ required: true }} name='country' className="bg-gray-100 border-2 border-gray-300 text-gray-500 text-4xl rounded-lg ps-5 p-1 font-bold" onChange={handleModuleChange}>
               {[...Array(15)].map((_, index) => (
                 <option key={index} value={index + 1}>{String(index + 1).padStart(2, '0')}</option>
               ))}
             </select>
           </div>
         </div>
-
       </div>
+
       <div className='grid grid-cols-2 ml-40'>
         <div className=''>
           <div className='image-container relative mb-20'>
@@ -148,14 +148,14 @@ const ExcelDataFrom = () => {
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
               {file && (
-                <div className='inline-flex text-green-600/80'>
+                <div className='inline-flex text-green-600/80 font-bold'>
                   <p className='p-2 w-full border-2 border-green-600/80 rounded-lg'>{file.name}</p>
                 </div>
               )}
             </div>
           ))}
           <p>Archivos de excel mostrados: {excelFilesCount}</p>
-          <Link href="/moduleExport" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+          <Link href="/modulePdf/ecomasPdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
             <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
               {nextButtonText}
             </button>

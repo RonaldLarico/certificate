@@ -266,19 +266,23 @@ const sendEmailToAllGroups = async () => {
 };
 
   return (
-    <div className="max-w-screen-xl mx-auto mt-40">
-      <div className="">
-        <h2>Imágenes guardadas en IndexedDB:</h2>
+    <div className="">
+      <div className='flex justify-center items-center mt-10 gap-6 p-12 bg-blue-600'>
+        <h1 className='text-6xl font-extrabold text-white'>Lista de módulos generados</h1>
+        <div className='text-gray-500 items-center'>
+        </div>
+      </div>
+      <div className="max-w-screen-xl mx-auto mt-10">
         {imageGroups.map((group, groupIndex) => (
           <div key={groupIndex} className=''>
             <div className='gap-10 inline-flex items-center text-xl'>
-              <h3 className='w-[500px] border-2 border-blue-600 p-4 rounded-xl font-bold'>{group.name}
+              <h3 className='w-[500px] border-4 border-blue-600 p-4 rounded-xl font-bold'>{group.name}
                 <span className="text-sm text-gray-400 ml-1">
                   ({group.images.length} módul{group.images.length !== 0 ? 'os' : ''})
                 </span>
               </h3>
               <button onClick={() => openModal(group)} className='w-40 p-4 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
-              <p className='w-96 border-2 border-green-600 rounded-xl p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
+              <p className='w-[400px] border-4 border-green-600 rounded-xl p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
               <button
                 onClick={() => convertToPDFAndEmail(group)}
                 disabled={sendButtonState[group.name] === 'sending' || sendButtonState[group.name] === 'sent'}
@@ -297,12 +301,11 @@ const sendEmailToAllGroups = async () => {
         ))}
         <div className='flex justify-between text-2xl font-extrabold mt-20 mb-10'>
         <button
-  onClick={() => convertAllToPDF()}
-  disabled={conversionInProgress || saveButtonText === 'Guardado'} 
-  className="p-4 bg-red-500 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300"
->
-  {conversionInProgress ? 'Guardando...' : saveButtonText}
-</button>
+          onClick={() => convertAllToPDF()}
+          disabled={conversionInProgress || saveButtonText === 'Guardado'}
+          className="p-4 bg-red-500 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">
+          {conversionInProgress ? 'Guardando...' : saveButtonText}
+        </button>
           <button
             onClick={sendEmailToAllGroups}
             disabled={allEmailsSent} // Deshabilitar el botón si todos los correos electrónicos ya se han enviado
