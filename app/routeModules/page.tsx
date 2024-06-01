@@ -14,37 +14,37 @@ const RoutesModules = () => {
 
         <div className='uppercase font-extrabold text-5xl text-gray-100'>
           <Link href="/moduleExcel/ecomasExcel" className="text-center">
-            <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
-                Ecomás
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
+              Ecomás
             </div>
           </Link>
           <Link href="/" className="text-center">
-            <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
               Cimade
             </div>
           </Link>
           <Link href="/" className="text-center">
-        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center hover:scale-125 duration-300">
-            Binex
-        </div>
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center hover:scale-125 duration-300">
+                Binex
+            </div>
           </Link>
         </div>
 
         <div className='uppercase font-extrabold text-5xl text-gray-100'>
           <Link href="/" className="">
-        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
-            Promás
-        </div>
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
+              Promás
+            </div>
           </Link>
           <Link href="/" className="">
-        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
-            Sayan
-        </div>
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center mb-20 hover:scale-125 duration-300">
+              Sayan
+            </div>
           </Link>
           <Link href="/" className="">
-        <div className="bg-blue-500 py-4 px-20 rounded-xl text-center hover:scale-125 duration-300">
-            Rizo
-        </div>
+            <div className="bg-blue-500 py-8 px-20 rounded-xl text-center hover:scale-125 duration-300">
+              Rizo
+            </div>
           </Link>
         </div>
       </div>
@@ -53,4 +53,4 @@ const RoutesModules = () => {
   )
 }
 
-export default RoutesModules
+export default RoutesModules;

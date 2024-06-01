@@ -28,7 +28,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
   const [convertedImages, setConvertedImages] = useState<File[]>([]);
   const [convertedImageIndexes, setConvertedImageIndexes] = useState<number[]>([]);
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
-  console.log("correooooo", excelData)
 
   useEffect(() => {
     const getStoredImages = async () => {
@@ -153,35 +152,97 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
         canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
         if (selectedData && Array.isArray(selectedData.nombres) && Array.isArray(selectedData.codigo)) {
-          const width = 2280;
+          const width = 2270;
           const height = 1225;
           const currentNombre = selectedData.nombres[arrayIndex];
           const currentCodigo = selectedData.codigo[arrayIndex];
-          ctx.font = '70px Arial';
           ctx.fillStyle = 'black';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          ctx.font = 'bold 72px Century Gothic';
+          const maxWidthNombre = 1900; // Ancho máximo para el nombre
+          const initialNombreFontSize = 72;
+          ctx.font = `bold ${initialNombreFontSize}px Century Gothic`;
+          if (currentNombre !== null) {
+              const nombreWidth = ctx.measureText(currentNombre).width;
+              if (nombreWidth > maxWidthNombre) {
+                  const scaleFactor = maxWidthNombre / nombreWidth;
+                  const reducedFontSize = initialNombreFontSize * scaleFactor;
+                  ctx.font = `bold ${reducedFontSize}px Century Gothic`;
+              }
+          }
           ctx.fillText(`${currentNombre}`, width, canvas.height / 2.5);
-          ctx.fillText(`${selectedData.actividadAcademica}`, width, height);
-          const lineHeight = 100;
+
+          const actividadAcademicaMaxWidth = 2550; // Ancho máximo para la actividad académica
+            if (selectedData.actividadAcademica !== null) {
+              const actividadAcademicaWidth = ctx.measureText(selectedData.actividadAcademica).width;
+              if (actividadAcademicaWidth > actividadAcademicaMaxWidth) {
+                  const scaleFactor = actividadAcademicaMaxWidth / actividadAcademicaWidth;
+                  const fontSize = 65 * scaleFactor;
+                  ctx.font = `bold ${fontSize}px Century Gothic`;
+              } else {
+                  ctx.font = 'bold 60px Century Gothic'; // Tamaño de fuente normal
+              }
+              ctx.fillText(`${selectedData.actividadAcademica}`, width, height);
+          }
+
+          const lineHeight = 70;
           const y = canvas.height / 1.7;
-          ctx.fillText("Curso-taller organizado por Ecomás Consultoria y Capacitaciones,", width, y);
-          ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal},`, width, y + lineHeight);
-          ctx.fillText(`con una duración de ${selectedData.horas} académicas`, width, y + lineHeight * 2);
-          const fontSize = 45;
+          ctx.font = '52px Century Gothic';
+          ctx.fillText("Curso - taller organizado por ECOMÁS Consultoria y Capacitación,", width, y);
+          ctx.fillText(`llevado a cabo desde el ${selectedData.fechaInicio} al ${selectedData.fechaFinal}, con una`, width, y + lineHeight);
+          ctx.fillText(`duración de ${selectedData.horas} académicas.`, width, y + lineHeight * 2);
+
+          const maxWidthh = 800; // Ancho máximo permitido
+          const fontSize = 32; // Tamaño de fuente
+          const lineHeightt = 40; // Altura de línea
+          const x = canvas.width / 6.6; // Posición X
+          let yy = canvas.height / 3.7; // Posición Y
+          let words;
+          // Dividir el texto en palabras
+          if (selectedData && selectedData.ponente !== null) {
+            words = selectedData.ponente.split(' ');
+            // Resto del código...
+          } else {
+            console.error("El ponente no está definido o es nulo.");
+          }
+          let line = '';
+          // Configurar estilo de texto
           ctx.fillStyle = 'white';
-          ctx.font = `${fontSize}px Arial`;
-          ctx.fillText(`${selectedData.ponente}`, canvas.width / 6.6, canvas.height / 3.7);
-          const textYPx = 2130;
+          ctx.font = `bold ${fontSize}px Century Gothic`;
+          ctx.textAlign = 'center';
+          if (words) {
+            // Iterar sobre cada palabra
+            for (const word of words) {
+                // Agregar palabra a la línea actual
+                const testLine = line + word + ' ';
+                // Medir el ancho de la línea actual
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                // Si la línea actual excede el ancho máximo permitido, dibujar la línea actual y comenzar una nueva línea
+                if (testWidth > maxWidthh) {
+                    ctx.fillText(line, x, yy);
+                    line = word + ' ';
+                    yy += lineHeightt;
+                } else {
+                    // Si no excede el ancho máximo, continuar agregando palabras a la línea actual
+                    line = testLine;
+                }
+            }
+          }
+          // Dibujar la última línea restante
+          ctx.fillText(line, x, yy);
+
+          const textYPx = 2127;
           ctx.fillStyle = 'black';
+          ctx.font = `bold 36px Century Gothic`;
           ctx.fillText(`${currentCodigo}`, canvas.width / 6.6, textYPx);
 
           ctx.fillStyle = 'white';
           ctx.textAlign = 'left';
-          const fontSizeT = 35;
-          ctx.font = `${fontSizeT}px Arial`;
+          ctx.font = `bold 32px Century Gothic`;
           const drawTemario = (temario: string, ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number) => {
-            const lineHeight = 50;
+            const lineHeight = 40;
             const bulletIndent = 380;
             const marginLeft = 0;
             const viñetas = temario.split('\n').map(viñeta => viñeta.trim());
@@ -300,7 +361,7 @@ if (excelData) {
   //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('actividadAcademicaData'));
 }
 
-useEffect(() => {
+/* useEffect(() => {
   excelData && Object.keys(groupedData).forEach((nombre, index) => {
     groupedData[nombre].forEach(({ dataIndex, arrayIndex }) => {
       const canvas = document.createElement('canvas');
@@ -309,7 +370,7 @@ useEffect(() => {
       if (excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
     });
   });
-}, [excelData]);
+}, [excelData]); */
 
   //{console.log('convertedImages:', convertedImages)}
   return (
@@ -335,7 +396,7 @@ useEffect(() => {
       </div>
       <button onClick={handleDeleteAllImages} className='mt-5 mb-20 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
 
-     {/* <div className="drawn-image-list-container">
+     <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
           <div className="drawn-image-list">
             {excelData && Object.keys(groupedData).map((nombre, index, email) => (
@@ -356,7 +417,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
-      </div> */}
+      </div>
 
     </div>
   );
