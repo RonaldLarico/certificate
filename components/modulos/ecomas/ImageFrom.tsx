@@ -1,5 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { openDatabase }  from '@/components/modulos/ecomas/database/index';
+import { FaRegImages } from "react-icons/fa6";
+import { BsImages } from "react-icons/bs";
 import Link from 'next/link';
 
 interface ExcelData {
@@ -361,7 +363,7 @@ if (excelData) {
   //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('actividadAcademicaData'));
 }
 
-/* useEffect(() => {
+useEffect(() => {
   excelData && Object.keys(groupedData).forEach((nombre, index) => {
     groupedData[nombre].forEach(({ dataIndex, arrayIndex }) => {
       const canvas = document.createElement('canvas');
@@ -370,55 +372,57 @@ if (excelData) {
       if (excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
     });
   });
-}, [excelData]); */
+}, [excelData]);
 
   //{console.log('convertedImages:', convertedImages)}
   return (
-    <div>
-      <h1 className='mb-10 text-center p-4 font-bold text-xl bg-blue-500 text-white rounded-s-xl'>Cargar imagenes ({numModules})</h1>
-      <div className='flex justify-center image-container relative mb-10 text-white font-mono'>
-        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl bg-blue-500 cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
+    <div className=''>
+      <div className='inline-flex w-full justify-center items-center mb-10 p-4 font-bold text-2xl bg-[#0060ff] text-white rounded-s-xl'>
+        <FaRegImages className='text-4xl mr-2'/>
+        <h1 >Cargar imagenes ({numModules})</h1>
+      </div>
+      <div className='flex justify-center border-b-4 border-[#007aff] image-container relative mb-10 text-white font-mono'>
+        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl mb-10 bg-[#0060ff] cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
       </div>
       {imagesToShow.map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
-            <div className='border-2 border-blue-500 p-2 w-full mr-10 rounded-lg font-bold'>
-              <p className='text-blue-500'>{file.name}</p>
+            <div className='border-2 border-[#007aff] py-3 w-full mr-10 rounded-lg font-bold'>
+              <p className='ml-2'>{file.name}</p>
             </div>
           )}
           {/* <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p> */}
           {imageTexts[index] && <p className="absolute top-80 left-80 text-yellow-400 bg-black bg-opacity-75 p-1 rounded-md">{imageTexts[index]}</p>}
         </div>
       ))}
-      <p className=''>Archivos de imagenes mostrados: {numModules}</p>
-      <div className="font-extrabold text-xl hover:scale-110 duration-300">
-      <button onClick={() => window.history.back()} className="mt-4 p-3 w-full bg-blue-600 text-white rounded-s-xl uppercase">Atrás</button>
-      </div>
-      <button onClick={handleDeleteAllImages} className='mt-5 mb-20 p-3 w-full bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>Cambiar diseño de las imágenes</button>
+      {/* <p className=''>Archivos de imagenes mostrados: {numModules}</p> */}
 
-     <div className="drawn-image-list-container">
+      {/* <div className="drawn-image-list-container">
         <h2>Imágenes Dibujadas</h2>
-          <div className="drawn-image-list">
-            {excelData && Object.keys(groupedData).map((nombre, index, email) => (
-              <div key={index} className="drawn-image-item">
-                <h3 className='text-green-600'>{nombre}</h3>
-                {excelData && excelData[groupedData[nombre][0].dataIndex]?.email && (
-                  <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
-                )}
-                {groupedData[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
-                  <div key={subIndex}>
-                  <canvas ref={(canvas) => {
-                    if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
-                  }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
-                  <p>{nombre}</p>
-                  ---------------------------------------------------------------------------------------------------------------------
-                </div>
-              ))}
+        <div className="drawn-image-list">
+        {excelData && Object.keys(groupedData).map((nombre, index, email) => (
+          <div key={index} className="drawn-image-item">
+          <h3 className='text-green-600'>{nombre}</h3>
+          {excelData && excelData[groupedData[nombre][0].dataIndex]?.email && (
+            <p className='text-blue-500'>Email: {excelData[groupedData[nombre][0].dataIndex]?.email[0]}</p>
+          )}
+          {groupedData[nombre].map(({ dataIndex, arrayIndex }, subIndex) => (
+            <div key={subIndex}>
+            <canvas ref={(canvas) => {
+              if (canvas && excelData[dataIndex]) drawCanvas(canvas, excelData[dataIndex], dataIndex, arrayIndex);
+            }} width={1122} height={793} style={{ width: '1122px', height: '793px' }} className=''/>
+            <p>{nombre}</p>
+            ---------------------------------------------------------------------------------------------------------------------
             </div>
           ))}
+          </div>
+        ))}
         </div>
-      </div>
-
+      </div> */}
+    <button onClick={handleDeleteAllImages} className='inline-flex justify-center items-center mt-5 mb-5 p-3 bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>
+      <BsImages className='text-3xl mr-2'/>
+      <h1>Nuevo diseño</h1>
+    </button>
     </div>
   );
 };

@@ -3,6 +3,10 @@ import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ImageUploader from '@/components/modulos/ecomas/ImageFrom';
 import Link from 'next/link';
+import Image from 'next/image';
+import { RiFileExcel2Line } from "react-icons/ri";
+import { FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
+import { PulseLoader } from "react-spinners";
 
 interface ExcelData {
   nombres: string[];
@@ -24,7 +28,6 @@ const ExcelDataFrom = () => {
   const [imagesAndExcel, setImagesAndExcel] = useState<{ image: File | null; imageId: number | null; excelData:ExcelData | null }[]>([]);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [excelLoaded, setExcelLoaded] = useState(false);
-  const [conversionInProgress, setConversionInProgress] = useState(false);
   const [nextButtonText, setNextButtonText] = useState("Siguiente");
   const [buttonDisabled, setButtonDisabled] = useState(true);
 
@@ -55,7 +58,7 @@ const ExcelDataFrom = () => {
       setImagesAndExcel(updatedImagesAndExcel);
       setExcelLoaded(true);
       setButtonDisabled(true); // Desactivar el botón cuando se cargan nuevos archivos excel
-      setNextButtonText("Dibujando...");
+      setNextButtonText("Dibujando");
     }
   };
 
@@ -111,9 +114,16 @@ const ExcelDataFrom = () => {
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
 
   return (
-    <section className=''>
-      <h1 className='mt-5 ml-5'>Módulares/Ecomás</h1>
-      <div className='flex justify-center items-center mt-10 gap-6 p-8 bg-blue-600'>
+    <section className='bg-[#001D51] min-h-screen pb-20'>
+      <div className='flex ml-10'>
+      <Image
+        src="/ecomas.png"
+        alt='ecomas'
+        width={250}
+        height={200}
+        className='mt-5'/>
+      </div>
+      <div className='flex justify-center items-center mt-5 gap-6 p-8 bg-[#0060ff]'>
         <h1 className='text-5xl font-extrabold text-white'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>
           <div className='relative'>
@@ -126,9 +136,34 @@ const ExcelDataFrom = () => {
         </div>
       </div>
 
-      <div className='grid grid-cols-2 ml-40'>
+      <div className='flex justify-between'>
+      <div className="p-10 font-mono text-3xl hover:scale-110 duration-300">
+        <button onClick={() => window.history.back()} className="flex items-center bg-gradient-to-r from-[#60a5fa] via-[#007aff] to-[#0060ff] px-16 py-3 text-white rounded-xl uppercase">
+        <FiChevronsLeft className='mr-2 text-5xl' /> {/* Icono a la izquierda */}
+          Atrás
+        </button>
+      </div>
+        <Link href="/modulePdf/ecomasPdf" className={`flex p-10 font-mono text-3xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+          <button className={`bg-gradient-to-r from-[#0060ff] via-[#007aff] to-[#60a5fa] px-10 py-3 text-white rounded-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
+            <span className="flex items-center justify-center">
+              {nextButtonText === "Siguiente" ? (
+                <>
+                  <span>{nextButtonText}</span>
+                  <FiChevronsRight className="ml-2 text-5xl" /> {/* Icono FiChevronsRight a la derecha */}
+                </>
+              ) : (
+                <>
+                  <span>Dibujando</span>
+                  <PulseLoader color="#ffff" size={10} className="ml-2 font-extrabold" /> {/* Icono ClockLoader a la derecha */}
+                </>
+              )}
+            </span>
+          </button>
+        </Link>
+      </div>
+      <div className='max-w-[1500px] mx-auto grid grid-cols-2 p-4 border-4 border-[#007aff] rounded-2xl'>
         <div className=''>
-          <div className='image-container relative mb-20'>
+          <div className='image-container relative'>
           </div>
           {imagesAndExcel.length > 0 && (
             <div>
@@ -139,28 +174,28 @@ const ExcelDataFrom = () => {
             </div>
           )}
           </div>
-        <div className='mt-20 mr-16'>
-          <h1 className='mb-10 text-center p-4 font-bold text-xl bg-green-600/80 w-full text-white rounded-e-xl'>Cargar archivos excel ({numModules})</h1>
-          <div className='flex relative mb-10 text-white font-mono justify-center'>
+        <div className=''>
+          <div className='inline-flex justify-center items-center mb-10 p-4 font-bold text-2xl bg-green-600/80 w-full text-white rounded-e-xl'>
+            <RiFileExcel2Line className='text-4xl mr-2'/>
+            <h1>Cargar archivos excel ({numModules})</h1>
+          </div>
+          <div className='flex relative border-b-4 border-green-600 mb-10 text-white font-mono justify-center'>
           <input type="file" accept=".xlsx, .xlsm, .xls" onChange={handleExcelFileChange} multiple
-            className='p-4 rounded-xl bg-green-600/80 cursor-pointer hover:scale-110 duration-300' />
+            className='p-4 mb-10 rounded-xl bg-green-600/80 cursor-pointer hover:scale-110 duration-300' />
           </div>
           {excelFiles.map((file, index) => (
             <div key={index} className='mb-4'>
               {file && (
-                <div className='inline-flex text-green-600/80 font-bold'>
-                  <p className='p-2 w-full border-2 border-green-600/80 rounded-lg'>{file.name}</p>
+                <div className='inline-flex font-bold w-full rounded-lg border-2 border-green-600'>
+                  <p className='py-3 w-full ml-2'>{file.name}</p>
                 </div>
               )}
             </div>
           ))}
-          <p>Archivos de excel mostrados: {excelFilesCount}</p>
-          <Link href="/modulePdf/ecomasPdf" className={`flex justify-end font-extrabold text-xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
-            <button className={`mt-4 p-3 w-full bg-green-600 text-white rounded-e-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
-              {nextButtonText}
-            </button>
-          </Link>
+          {/* <p>Archivos de excel mostrados: {excelFilesCount}</p> */}
         </div>
+
+
       </div>
     </section>
   );

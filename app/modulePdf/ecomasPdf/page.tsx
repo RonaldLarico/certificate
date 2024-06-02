@@ -3,6 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { openDatabase } from '@/components/modulos/ecomas/database/index';
 import jsPDF from 'jspdf';
 import Modal from '@/components/modulos/share/Modal';
+import { PiCertificateBold } from "react-icons/pi";
+import Image from 'next/image';
+import { FiChevronsLeft } from 'react-icons/fi';
+import { MdAttachEmail, MdPictureAsPdf } from "react-icons/md";
+import { SiAmazonsimpleemailservice } from 'react-icons/si';
+import { RiDeleteBin5Line } from 'react-icons/ri';
+import { PulseLoader } from 'react-spinners';
 
 const ImageExport = () => {
   const [imageGroups, setImageGroups] = useState<{ name: string, images: File[] }[]>([]);
@@ -10,7 +17,7 @@ const ImageExport = () => {
   const [currentGroup, setCurrentGroup] = useState<{ name: string, images: File[] } | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [conversionInProgress, setConversionInProgress] = useState(false);
-  const [saveButtonText, setSaveButtonText] = useState('Guardar PDF');
+  const [saveButtonText, setSaveButtonText] = useState('Guardar');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [sendButtonState, setSendButtonState] = useState<{ [groupName: string]: "initial" | "sending" | "sent" }>({});
   const [allEmailsSent, setAllEmailsSent] = useState(false);
@@ -266,29 +273,82 @@ const sendEmailToAllGroups = async () => {
 };
 
   return (
-    <div className="">
-      <div className='flex justify-center items-center mt-10 gap-6 p-12 bg-blue-600'>
-        <h1 className='text-6xl font-extrabold text-white'>Lista de módulos generados</h1>
-        <div className='text-gray-500 items-center'>
-        </div>
+    <div className="bg-[#001D51] min-h-screen pb-1">
+      <div className='ml-10'>
+        <Image
+          src="/ecomas.png"
+          alt='ecomas'
+          width={250}
+          height={200}
+          className='pt-5'/>
       </div>
-      <div className="max-w-screen-xl mx-auto mt-10">
+      <div className='flex justify-center items-center mt-5 gap-6 p-12 bg-blue-600'>
+        <h1 className='text-6xl font-extrabold text-white'>Lista de módulos generados</h1>
+        <PiCertificateBold className='text-7xl'/>
+      </div>
+
+      <div className='mx-auto justify-center p-5 font-mono text-2xl ml-60 mr-60 mt-5'>
+  <div className='flex justify-between'>
+    {/* Contenedor para los botones a la izquierda */}
+    <div className="flex gap-5">
+      <div className="inline-flex items-center px-8 bg-blue-600 text-white rounded-xl hover:scale-110 duration-300">
+        <FiChevronsLeft className='mr-2 text-5xl' />
+        <button onClick={() => window.history.back()} className='uppercase' >Atrás</button>
+      </div>
+      <div className=" px-6 bg-red-500 items-center text-white rounded-xl hover:scale-110 duration-300">
+        <button
+          onClick={() => convertAllToPDF()}
+          disabled={conversionInProgress || saveButtonText === 'Guardado'}
+           className='uppercase inline-flex items-center pt-3'>
+          {conversionInProgress ? 'Guardando...' : saveButtonText}
+          <MdPictureAsPdf className="ml-2 text-4xl" />
+        </button>
+      </div>
+    </div>
+    {/* Contenedor para los botones a la derecha */}
+    <div className="flex gap-5">
+      <div className='text-white items-center px-8 bg-green-600 rounded-xl hover:scale-110 duration-300'>
+        <button
+          onClick={sendEmailToAllGroups}
+          disabled={allEmailsSent} // Deshabilitar el botón si todos los correos electrónicos ya se han enviado
+          className={`uppercase inline-flex items-center pt-4 ${allEmailsSent ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <MdAttachEmail className='mr-2 text-4xl' />
+          {allEmailsSent ? 'Módulos Enviados' : 'Enviar'}
+        </button>
+      </div>
+      <div className='inline-flex items-center text-white p-4 bg-red-600 rounded-xl hover:scale-110 duration-300'>
+        <button onClick={deleteImagesFromDB} className='uppercase'>Limpiar</button>
+        <RiDeleteBin5Line className='ml-2 text-4xl' />
+      </div>
+    </div>
+  </div>
+</div>
+
+      <div className="max-w-screen-xl mx-auto mt- mb-20 items-center">
+        <div className=''>
         {imageGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className=''>
+          <div key={groupIndex} className='flex justify-center'>
             <div className='gap-10 inline-flex items-center text-xl'>
-              <h3 className='w-[500px] border-4 border-blue-600 p-4 rounded-xl font-bold'>{group.name}
+              <h3 className='w-[550px] border-4 border-blue-600 p-4 mt-5 items-center rounded-xl font-bold'>{group.name}
                 <span className="text-sm text-gray-400 ml-1">
                   ({group.images.length} módul{group.images.length !== 0 ? 'os' : ''})
                 </span>
               </h3>
-              <button onClick={() => openModal(group)} className='w-40 p-4 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
-              <p className='w-[400px] border-4 border-green-600 rounded-xl p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
+              <button onClick={() => openModal(group)} className='w-40 p-4 mt-5 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
+              <p className='w-[450px] border-4 border-green-600 rounded-xl mt-5 p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
               <button
                 onClick={() => convertToPDFAndEmail(group)}
                 disabled={sendButtonState[group.name] === 'sending' || sendButtonState[group.name] === 'sent'}
-                className={`bg-${sendButtonState[group.name] === 'sent' ? 'red' : 'green'}-600 p-4 rounded-xl hover:scale-110 duration-300 font-mono`}>
-                {sendButtonState[group.name] === 'sending' ? 'Enviando...' : (sendButtonState[group.name] === 'sent' ? 'Enviado' : 'Enviar')}
+                className={`relative bg-${sendButtonState[group.name] === 'sent' ? 'red' : 'green'}-600 p-4 mt-5 rounded-xl hover:scale-110 duration-300 font-mono`}
+              >
+                {sendButtonState[group.name] === 'sending' ? (
+                  <div className='flex items-center'>
+                    <span className="mr-2">Enviando</span>
+                    <PulseLoader color="#fff" size={6} />
+                  </div>
+                ) : (sendButtonState[group.name] === 'sent' ? 'Enviado' : 'Enviar')}
               </button>
+
             </div>
             <div className="image-grid mb-8">
               {group.images.map((image, index) => (
@@ -299,24 +359,9 @@ const sendEmailToAllGroups = async () => {
             </div>
           </div>
         ))}
-        <div className='flex justify-between text-2xl font-extrabold mt-20 mb-10'>
-        <button
-          onClick={() => convertAllToPDF()}
-          disabled={conversionInProgress || saveButtonText === 'Guardado'}
-          className="p-4 bg-red-500 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">
-          {conversionInProgress ? 'Guardando...' : saveButtonText}
-        </button>
-          <button
-            onClick={sendEmailToAllGroups}
-            disabled={allEmailsSent} // Deshabilitar el botón si todos los correos electrónicos ya se han enviado
-            className={`w-full text-white p-4 text-2xl font-extrabold uppercase bg-green-600 rounded-e-xl hover:scale-110 duration-300 ${allEmailsSent ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            {allEmailsSent ? 'Módulos Enviados' : 'Enviar a Email (Todos los Módulos)'}
-          </button>
         </div>
-        <div className='flex justify-between text-2xl font-extrabold mb-40'>
-          <button onClick={() => window.history.back()} className="p-4 bg-blue-600 text-white rounded-s-xl w-full uppercase hover:scale-110 duration-300">Atrás</button>
-          <button onClick={deleteImagesFromDB} className='w-full text-white p-4 text-2xl font-extrabold uppercase bg-red-600 rounded-e-xl hover:scale-110 duration-300'>Limpiar Datos</button>
-        </div>
+
+
           {currentGroup && (
             <Modal onClose={closeModal}>
               <div className='flex justify-center'>
