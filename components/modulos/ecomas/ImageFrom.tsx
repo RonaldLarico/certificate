@@ -388,7 +388,7 @@ useEffect(() => {
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
             <div className='border-2 border-[#007aff] py-3 w-full mr-10 rounded-lg font-bold'>
-              <p className='ml-2'>{file.name}</p>
+              <p className='ml-2 text-gray-200'>{file.name}</p>
             </div>
           )}
           {/* <p className="text-gray-500">ID: {index >= numModules ? index - numModules : index}</p> */}

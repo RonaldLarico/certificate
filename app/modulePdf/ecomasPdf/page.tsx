@@ -9,7 +9,7 @@ import { FiChevronsLeft } from 'react-icons/fi';
 import { MdAttachEmail, MdPictureAsPdf } from "react-icons/md";
 import { SiAmazonsimpleemailservice } from 'react-icons/si';
 import { RiDeleteBin5Line } from 'react-icons/ri';
-import { PulseLoader } from 'react-spinners';
+import { CircleLoader, PacmanLoader, PulseLoader } from 'react-spinners';
 
 const ImageExport = () => {
   const [imageGroups, setImageGroups] = useState<{ name: string, images: File[] }[]>([]);
@@ -21,7 +21,7 @@ const ImageExport = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [sendButtonState, setSendButtonState] = useState<{ [groupName: string]: "initial" | "sending" | "sent" }>({});
   const [allEmailsSent, setAllEmailsSent] = useState(false);
-
+  const [showSpinner, setShowSpinner] = useState(false);
 
   useEffect(() => {
     const getImagesFromDB = async () => {
@@ -158,16 +158,19 @@ const ImageExport = () => {
 
   const deleteImagesFromDB = async () => {
     try {
+      setShowSpinner(true);
       const db = await openDatabase();
       const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
       const objectStore = transaction.objectStore('ImagesEcomas');
       const clearRequest = objectStore.clear();
       clearRequest.onsuccess = () => {
         setImageGroups([]);
+        setShowSpinner(true);
         console.log('Imágenes eliminadas correctamente.');
       };
     } catch (error) {
       console.error('Error al eliminar las imágenes:', error);
+      setShowSpinner(false);
     }
   };
 
@@ -282,19 +285,19 @@ const sendEmailToAllGroups = async () => {
           height={200}
           className='pt-5'/>
       </div>
-      <div className='flex justify-center items-center mt-5 gap-6 p-12 bg-blue-600'>
-        <h1 className='text-6xl font-extrabold text-white'>Lista de módulos generados</h1>
-        <PiCertificateBold className='text-7xl'/>
+      <div className='flex justify-center items-center mt-5 gap-6 p-12 bg-[#0060ff]'>
+        <h1 className='text-6xl font-extrabold text-gray-200'>Lista de módulos generados</h1>
+        <PiCertificateBold className='text-7xl text-gray-200'/>
       </div>
 
       <div className='mx-auto justify-center p-5 font-mono text-2xl ml-60 mr-60 mt-5'>
   <div className='flex justify-between'>
     {/* Contenedor para los botones a la izquierda */}
     <div className="flex gap-5">
-      <div className="inline-flex items-center px-8 bg-blue-600 text-white rounded-xl hover:scale-110 duration-300">
+      <button onClick={() => window.history.back()} className="inline-flex items-center px-8 bg-[#0060ff] text-white rounded-xl hover:scale-110 duration-300">
         <FiChevronsLeft className='mr-2 text-5xl' />
-        <button onClick={() => window.history.back()} className='uppercase' >Atrás</button>
-      </div>
+        <h1 className='uppercase' >Atrás</h1>
+      </button>
       <div className=" px-6 bg-red-500 items-center text-white rounded-xl hover:scale-110 duration-300">
         <button
           onClick={() => convertAllToPDF()}
@@ -316,10 +319,10 @@ const sendEmailToAllGroups = async () => {
           {allEmailsSent ? 'Módulos Enviados' : 'Enviar'}
         </button>
       </div>
-      <div className='inline-flex items-center text-white p-4 bg-red-600 rounded-xl hover:scale-110 duration-300'>
-        <button onClick={deleteImagesFromDB} className='uppercase'>Limpiar</button>
+      <button onClick={deleteImagesFromDB} className='inline-flex items-center text-white p-4 bg-red-600 rounded-xl hover:scale-110 duration-300'>
+        <h1 className='uppercase'>Limpiar</h1>
         <RiDeleteBin5Line className='ml-2 text-4xl' />
-      </div>
+      </button>
     </div>
   </div>
 </div>
@@ -329,18 +332,17 @@ const sendEmailToAllGroups = async () => {
         {imageGroups.map((group, groupIndex) => (
           <div key={groupIndex} className='flex justify-center'>
             <div className='gap-10 inline-flex items-center text-xl'>
-              <h3 className='w-[550px] border-4 border-blue-600 p-4 mt-5 items-center rounded-xl font-bold'>{group.name}
+              <h3 className='w-[550px] border-4 border-[#0060ff] text-gray-200 p-4 mt-5 items-center rounded-xl font-bold'>{group.name}
                 <span className="text-sm text-gray-400 ml-1">
                   ({group.images.length} módul{group.images.length !== 0 ? 'os' : ''})
                 </span>
               </h3>
-              <button onClick={() => openModal(group)} className='w-40 p-4 mt-5 bg-blue-600 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
-              <p className='w-[450px] border-4 border-green-600 rounded-xl mt-5 p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
+              <button onClick={() => openModal(group)} className='w-40 p-4 mt-5 bg-[#0060ff] text-gray-200 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
+              <p className='w-[450px] border-4 border-green-600 text-gray-200 rounded-xl mt-5 p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
               <button
                 onClick={() => convertToPDFAndEmail(group)}
                 disabled={sendButtonState[group.name] === 'sending' || sendButtonState[group.name] === 'sent'}
-                className={`relative bg-${sendButtonState[group.name] === 'sent' ? 'red' : 'green'}-600 p-4 mt-5 rounded-xl hover:scale-110 duration-300 font-mono`}
-              >
+                className={`relative bg-${sendButtonState[group.name] === 'sent' ? 'red' : 'green'}-600 text-gray-200 p-4 mt-5 rounded-xl hover:scale-110 duration-300 font-mono`}>
                 {sendButtonState[group.name] === 'sending' ? (
                   <div className='flex items-center'>
                     <span className="mr-2">Enviando</span>
@@ -394,6 +396,17 @@ const sendEmailToAllGroups = async () => {
                 style={{ width: '297mm', height: '210mm' }}/>
             </Modal>
           )}
+          {showSpinner && (
+  <div className="flex justify-center items-center mt-32">
+    <button onClick={() => window.history.back()} className="text-center">
+      <PacmanLoader color="#0060ff" size={80} className='w-60 text-gray-400'/>
+      <h1 className='underline mt-5 text-gray-400 font-mono text-2xl'>
+        Volver a generar modulares
+      </h1>
+    </button>
+  </div>
+)}
+
 
       </div>
     </div>

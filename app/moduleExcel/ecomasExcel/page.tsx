@@ -137,13 +137,13 @@ const ExcelDataFrom = () => {
       </div>
 
       <div className='flex justify-between'>
-      <div className="p-10 font-mono text-3xl hover:scale-110 duration-300">
+      <div className="p-10 ml-40 font-mono text-3xl hover:scale-110 duration-300">
         <button onClick={() => window.history.back()} className="flex items-center bg-gradient-to-r from-[#60a5fa] via-[#007aff] to-[#0060ff] px-16 py-3 text-white rounded-xl uppercase">
         <FiChevronsLeft className='mr-2 text-5xl' /> {/* Icono a la izquierda */}
           Atrás
         </button>
       </div>
-        <Link href="/modulePdf/ecomasPdf" className={`flex p-10 font-mono text-3xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+        <Link href="/modulePdf/ecomasPdf" className={`flex p-10 mr-40 font-mono text-3xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
           <button className={`bg-gradient-to-r from-[#0060ff] via-[#007aff] to-[#60a5fa] px-10 py-3 text-white rounded-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
             <span className="flex items-center justify-center">
               {nextButtonText === "Siguiente" ? (
@@ -187,7 +187,7 @@ const ExcelDataFrom = () => {
             <div key={index} className='mb-4'>
               {file && (
                 <div className='inline-flex font-bold w-full rounded-lg border-2 border-green-600'>
-                  <p className='py-3 w-full ml-2'>{file.name}</p>
+                  <p className='py-3 w-full ml-2 text-gray-200'>{file.name}</p>
                 </div>
               )}
             </div>
