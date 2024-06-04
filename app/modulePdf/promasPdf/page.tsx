@@ -1,15 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { openDatabase } from '@/components/modulos/ecomas/database/index';
+import { openDatabase } from '@/components/modulos/promas/database/index';
 import jsPDF from 'jspdf';
 import Modal from '@/components/modulos/share/Modal';
 import { PiCertificateBold } from "react-icons/pi";
 import Image from 'next/image';
 import { FiChevronsLeft } from 'react-icons/fi';
 import { MdAttachEmail, MdPictureAsPdf } from "react-icons/md";
-import { SiAmazonsimpleemailservice } from 'react-icons/si';
 import { RiDeleteBin5Line } from 'react-icons/ri';
-import { CircleLoader, PacmanLoader, PulseLoader } from 'react-spinners';
+import { PacmanLoader, PulseLoader } from 'react-spinners';
 
 const ImageExport = () => {
   const [imageGroups, setImageGroups] = useState<{ name: string, images: File[] }[]>([]);
@@ -27,8 +26,8 @@ const ImageExport = () => {
     const getImagesFromDB = async () => {
       try {
         const db = await openDatabase();
-        const transaction = db.transaction(['ImagesEcomas'], 'readonly');
-        const objectStore = transaction.objectStore('ImagesEcomas');
+        const transaction = db.transaction(['ImagesPromas'], 'readonly');
+        const objectStore = transaction.objectStore('ImagesPromas');
         const storedImages: File[] = [];
         const cursorRequest = objectStore.openCursor();
         cursorRequest.onsuccess = function(event) {
@@ -65,7 +64,7 @@ const ImageExport = () => {
     for (let i = 0; i < group.images.length; i++) {
       await convertImageToPDF(group.images[i], group.name, i);
     }
-    if (!saveSuccess) { // Solo mostrar el mensaje de éxito si aún no se ha mostrado
+    if (!saveSuccess) {
       setSaveSuccess(true);
       alert(`Guardado con éxito '${group.name}'`);
     }
@@ -78,7 +77,7 @@ const ImageExport = () => {
     }
     setConversionInProgress(false);
     setSaveButtonText('Guardado');
-    if (!saveSuccess) { // Solo mostrar el mensaje de éxito si aún no se ha mostrado
+    if (!saveSuccess) {
       setSaveSuccess(true);
       alert(`Guardado con éxito`);
     }
@@ -93,7 +92,6 @@ const ImageExport = () => {
       reader.onload = async () => {
         const imgData = reader.result as string;
         pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-        // Obtener la ruta del archivo Excel del almacenamiento local
         let routeExcel;
         const excelFilePath = sessionStorage.getItem('excelFilePath');
         if (excelFilePath !== null) {
@@ -101,25 +99,21 @@ const ImageExport = () => {
           console.log(routeExcel);
         } else {
           console.log("La ruta del archivo Excel no está definida en el almacenamiento local.");
-          return; // Salir de la función si no se encuentra la ruta del archivo Excel
+          return;
         }
       console.log("rutaaaaaaaa", routeExcel);
-        // Verificar si la ruta del archivo Excel está definida
         if (!excelFilePath) {
           console.error('La ruta del archivo Excel no está definida en el almacenamiento local');
           return;
         }
-        // Convertir el PDF a una cadena Base64
         const pdfBase64 = pdf.output('datauristring');
-        // Crear el objeto JSON con los datos del PDF
         const pdfData = {
           groupName,
           index,
           pdfBase64,
           routeExcel,
         };
-        // Enviar el objeto JSON a la API
-      const response = await fetch("../api/apiPdf", {
+      const response = await fetch("../../api/apiPdf", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -160,8 +154,8 @@ const ImageExport = () => {
     try {
       setShowSpinner(true);
       const db = await openDatabase();
-      const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
-      const objectStore = transaction.objectStore('ImagesEcomas');
+      const transaction = db.transaction(['ImagesPromas'], 'readwrite');
+      const objectStore = transaction.objectStore('ImagesPromas');
       const clearRequest = objectStore.clear();
       clearRequest.onsuccess = () => {
         setImageGroups([]);
@@ -180,17 +174,12 @@ const ImageExport = () => {
   //console.log("Datos guardados en sessionStorage:", actividadAcademicaData);
 
   const getEmailForGroup = (groupName: string) => {
-    // Verificar si hay datos guardados en sessionStorage
     if (emailData) {
-      // Convertir los datos guardados de sessionStorage a objetos JavaScript
       const emailDataArray = JSON.parse(emailData);
-      // Encontrar el objeto correspondiente al nombre de grupo
       const groupData = emailDataArray.find((group: { nombre: string }) => group.nombre === groupName);
-      // Verificar si se encontró el grupo
       if (groupData) {
         console.log(`Correo asignado para ${groupName}: ${groupData.email}`);
         return groupData.email
-        // Asignar el correo y los materiales al grupo
       } else {
         console.log(`No se encontraron datos para el grupo ${groupName}`);
       }
@@ -198,7 +187,6 @@ const ImageExport = () => {
       console.log("No hay datos guardados en sessionStorage");
     }
   };
-// Llamar a la función para asignar correo y materiales a cada nombre de grupo
 imageGroups.forEach(group => getEmailForGroup(group.name));
 
 const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => {
@@ -208,7 +196,6 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
       [group.name]: 'sending'
     }));
     const pdfs: string[] = [];
-    // Iterar sobre cada imagen en el grupo y convertirla a PDF
     for (const image of group.images) {
       const pdf = new jsPDF({
         orientation: 'landscape'
@@ -223,21 +210,21 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
       });
       reader.readAsDataURL(image);
       await promise;
-      // Convertir el PDF a una cadena Base64 y agregarlo al array de PDFs
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
       pdfs.push(pdfBase64);
     }
-    // Crear el objeto JSON con los datos del PDF y enviarlo a la API
+
     const dataEmail = {
       groupName: group.name,
       email: getEmailForGroup(group.name),
       pdfBase64Array: pdfs,
       dataString,
-      templateName: 'Ecomas',
-      user: 'ecomas.201@gmail.com',
-      pass: 'aubslrrzusgphuad'
+      templateName: 'Promas',
+      user: 'promascorporacion@gmail.com',
+      pass: 'hxqdcmlfshgzknsc'
     };
-    const response = await fetch("../api/apiMail", {
+
+    const response = await fetch("../../api/apiMail", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -262,11 +249,9 @@ const convertToPDFAndEmail = async (group: { name: string, images: File[] }) => 
 
 const sendEmailToAllGroups = async () => {
   try {
-    // Iterar sobre cada grupo de imágenes y enviar el correo electrónico
     for (const group of imageGroups) {
       await convertToPDFAndEmail(group);
-      // Pausa para dar tiempo entre cada envío de correo electrónico
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     setAllEmailsSent(true);
   } catch (error) {
@@ -276,16 +261,16 @@ const sendEmailToAllGroups = async () => {
 };
 
   return (
-    <div className="bg-[#001D51] min-h-screen pb-1">
+    <div className="bg-[#360B7F] min-h-screen pb-1">
       <div className='ml-10'>
         <Image
-          src="/ecomas.png"
-          alt='ecomas'
+          src="/promas.png"
+          alt='promas'
           width={250}
           height={200}
           className='pt-5'/>
       </div>
-      <div className='flex justify-center items-center mt-5 gap-6 p-12 bg-[#0060ff]'>
+      <div className='flex justify-center items-center mt-5 gap-6 p-12 bg-[#B20076]'>
         <h1 className='text-6xl font-extrabold text-gray-200'>Lista de módulos generados</h1>
         <PiCertificateBold className='text-7xl text-gray-200'/>
       </div>
@@ -294,7 +279,7 @@ const sendEmailToAllGroups = async () => {
   <div className='flex justify-between'>
     {/* Contenedor para los botones a la izquierda */}
     <div className="flex gap-5">
-      <button onClick={() => window.history.back()} className="inline-flex items-center px-8 bg-[#0060ff] text-white rounded-xl hover:scale-110 duration-300">
+      <button onClick={() => window.history.back()} className="inline-flex items-center px-8 bg-[#CF0072] text-white rounded-xl hover:scale-110 duration-300">
         <FiChevronsLeft className='mr-2 text-5xl' />
         <h1 className='uppercase' >Atrás</h1>
       </button>
@@ -332,12 +317,12 @@ const sendEmailToAllGroups = async () => {
         {imageGroups.map((group, groupIndex) => (
           <div key={groupIndex} className='flex justify-center'>
             <div className='gap-10 inline-flex items-center text-xl'>
-              <h3 className='w-[550px] border-4 border-[#0060ff] text-gray-200 p-4 mt-5 items-center rounded-xl font-bold'>{group.name}
+              <h3 className='w-[550px] border-4 border-[#FD4660] text-gray-200 p-4 mt-5 items-center rounded-xl font-bold'>{group.name}
                 <span className="text-sm text-gray-400 ml-1">
                   ({group.images.length} módul{group.images.length !== 0 ? 'os' : ''})
                 </span>
               </h3>
-              <button onClick={() => openModal(group)} className='w-40 p-4 mt-5 bg-[#0060ff] text-gray-200 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
+              <button onClick={() => openModal(group)} className='w-40 p-4 mt-5 bg-[#B20076] text-gray-200 rounded-xl font-mono hover:scale-110 duration-300'>Ver módulos</button>
               <p className='w-[450px] border-4 border-green-600 text-gray-200 rounded-xl mt-5 p-4 font-semibold'>{getEmailForGroup(group.name)}</p>
               <button
                 onClick={() => convertToPDFAndEmail(group)}
@@ -370,7 +355,7 @@ const sendEmailToAllGroups = async () => {
                 <div className="modal-buttons inline-flex mb-5">
                   <button
                     onClick={handlePrevImage}
-                    className={`text-gray-200 mr-3 border-2 border-[#0060ff] hover:bg-[#0060ff] px-3 py-1 rounded-xl uppercase font-extrabold text-xl hover:scale-125 duration-300${currentImageIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    className={`text-gray-200 mr-3 border-2 border-[#CF0072] hover:bg-[#CF0072] px-3 py-1 rounded-xl uppercase font-extrabold text-xl hover:scale-125 duration-300${currentImageIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     &#60;
                   </button>
                   <div className="pagination flex font-extrabold">
@@ -378,14 +363,14 @@ const sendEmailToAllGroups = async () => {
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`page-btn ${index === currentImageIndex ? 'bg-gray-300 text-[#0060ff] rounded-xl' : 'bg-[#0060ff] text-gray-200 hover:scale-125 duration-300 hover:bg-slate-200 hover:text-[#0060ff]'} px-4 py-2 rounded-xl`}>
+                        className={`page-btn ${index === currentImageIndex ? 'bg-gray-300 text-[#CF0072] rounded-xl' : 'bg-[#CF0072] text-gray-200 hover:scale-125 duration-300 hover:bg-slate-200 hover:text-[#CF0072]'} px-4 py-2 rounded-xl`}>
                         {index + 1}
                       </button>
                     ))}
                   </div>
                   <button
                     onClick={handleNextImage}
-                    className={`text-gray-200 ml-3 border-2 border-[#0060ff] hover:bg-[#0060ff] px-3 py-1 rounded-xl uppercase font-extrabold text-xl hover:scale-125 duration-300${currentImageIndex === currentGroup.images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    className={`text-gray-200 ml-3 border-2 border-[#CF0072] hover:bg-[#CF0072] px-3 py-1 rounded-xl uppercase font-extrabold text-xl hover:scale-125 duration-300${currentImageIndex === currentGroup.images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     &#62;
                   </button>
                 </div>
@@ -399,7 +384,7 @@ const sendEmailToAllGroups = async () => {
           {showSpinner && (
   <div className="flex justify-center items-center mt-32">
     <button onClick={() => window.history.back()} className="text-center">
-      <PacmanLoader color="#0060ff" size={80} className='w-60 text-gray-400'/>
+      <PacmanLoader color="#CF0072" size={80} className='w-60 text-gray-400'/>
       <h1 className='underline mt-5 text-gray-400 font-mono text-2xl'>
         Volver a generar modulares
       </h1>

@@ -25,6 +25,7 @@ export const PromasTemplate = ({
 }: PromasEmailTemplate) => (
   <Html>
     <Head />
+    <Preview>Corporación Promás</Preview>
     <Body style={main}>
       <Container style={container}>
         <Img
@@ -39,16 +40,28 @@ export const PromasTemplate = ({
             marginTop: "20px"
           }}
         />
-        <Heading style={h1}>Saludos cordiales estimado(a) participante {groupName}</Heading>
+        <Heading style={h1}>Estimado(a) {groupName}</Heading>
 
         <Text style={{ ...text, marginBottom: "2px", textAlign: "justify" as const, }}>
-          Es un placer para nosotros otorgarte este certificado de finalización
-          del curso de de Corporación Promas. Reconocemos tu
+          Es un placer para nosotros otorgarle estos certificados de finalización
+          de los modulares correspondientes a su diplomado en Corporación Promas.
+          <br/>
+          Reconocemos tu
           dedicación y esfuerzo para completar con éxito este programa educativo.
-          Adjuntamos el certificado y materiales del curso:
+          Adjuntamos los certificados correspondientes:
         </Text>
-        <pre style={code}>{dataString}</pre> {/* Cambio aquí */}
-
+        <br />
+          <strong>
+            {dataString &&
+              dataString.map((item, index) => (
+                <React.Fragment key={index}>
+                  {item}
+                  {index !== dataString.length - 1 && <br />}{" "}
+                  {/* Agrega un salto de línea si no es el último elemento */}
+                </React.Fragment>
+              ))}
+          </strong>
+        <br />
         <Section style={informationTable}>
           <Row style={informationTableRow}>
             <Column colSpan={2}>
@@ -84,7 +97,7 @@ export const PromasTemplate = ({
                 <Row>
                   <Column style={informationTableColumn}>
                     <Text style={informationTableLabel}>SITIO WEB</Text>
-                    promas.edu.pe
+                    www.promas.edu.pe
                   </Column>
                 </Row>
               </Section>
@@ -123,10 +136,8 @@ export const PromasTemplate = ({
                       />
                     </Link>
                   </Column>
-
                 </Row>
               </Section>
-            
             </Column>
           </Row>
         </Section>
@@ -143,22 +154,6 @@ export const PromasTemplate = ({
     </Body>
   </Html>
 );
-
-PromasTemplate.PreviewProps = {
-  name: "Juan",
-  message: [
-    "MATERIALES:",
-    "SESION I  : https://n9.cl/s97lk",
-    "SESION II : https://n9.cl/a9v7k",
-    "https://n9.cl/2zs6v",
-    "SESION III: https://n9.cl/67vd0",
-    "VIDEOS:",
-    "SESION I  : https://n9.cl/a106h",
-    "SESION II : https://n9.cl/u7cos2",
-    "SESION III: https://n9.cl/6q57q"
-  ].join("\n")
-} as PromasEmailTemplate;
-
 
 export default PromasTemplate;
 

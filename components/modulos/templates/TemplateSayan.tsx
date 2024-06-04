@@ -2,20 +2,18 @@ import { Body, Container, Head, Heading, Hr, Html, Img, Link, Preview, Section, 
 import * as React from "react";
 
 interface SayanEmailTemplateProps {
-    name?: string;
-    message?: string;
-    curso?: string;
+  groupName?: string;
+  dataString?: string[];
 }
 
 export const SayanTemplate = ({
-  name,
-  message,
-  curso = '{CursoSayan}',
+  groupName,
+  dataString,
 }: SayanEmailTemplateProps) => {
   return (
     <Html>
       <Head />
-        <Preview>Certificado del curso "Curso"</Preview>
+        <Preview>Corporación Sayan</Preview>
           <Body style={main}>
             <Container style={container}>
               <Section style={coverSection}>
@@ -28,19 +26,27 @@ export const SayanTemplate = ({
                   />
                     </Section>
                     <Section style={upperSection}>
-                      <Heading style={h1}>Hola, {name}</Heading>
+                      <Heading style={h1}>Estimado(a), {groupName}</Heading>
                         <Text style={{ ...mainText, display: "inline" }}>
-                          Es un honor para nosotros otorgarte este certificado de finalización
-                          del curso de
-                        <Text style={{ ...mainText, fontWeight: 'bold', display: 'inline' }}> {curso} </Text>
-                        <Text style={{ ...mainText, display: "inline" }}>
-                          de la empresa Sayan. Agradecemos tu
+                          Es un honor para nosotros otorgarle estos certificados de finalización
+                          sobre los modulares correspondientes a su diplomado
+                          de la empresa Sayan.<br/>
+                          Agradecemos su
                           dedicación y compromiso para completar este programa educativo con éxito.
                         </Text>
-                        </Text>
                       <Section style={verificationSection}>
-                        <Text style={verifyText}>MATERIALES DEL CURSO</Text>
-                          <pre style={validityText}>{message}</pre> {/* Cambio aquí */}
+                        <br />
+                          <strong>
+                            {dataString &&
+                              dataString.map((item, index) => (
+                                <React.Fragment key={index}>
+                                  {item}
+                                  {index !== dataString.length - 1 && <br />}{" "}
+                                  {/* Agrega un salto de línea si no es el último elemento */}
+                                </React.Fragment>
+                              ))}
+                          </strong>
+                        <br />
                       </Section>
                     </Section>
                     <Hr />
@@ -55,8 +61,7 @@ export const SayanTemplate = ({
                           />
                         </Column>
                         <Column align="left" style={{ paddingLeft: "18px", width: "60%" }}>
-                          <Text style={productTitle}>Sayan</Text>
-                          <Text style={productDescription}>Corporación</Text>
+                          <Text style={productTitle}>Corporación Sayan</Text>
                           <Text style={productDescription}>Área de certificación</Text>
                           <Text style={productDescription}>
                             <strong>Teléfono:</strong> <Link href="https://api.whatsapp.com/send?phone=51978490739"> +51 978490739</Link>
@@ -72,7 +77,7 @@ export const SayanTemplate = ({
                             style={productLink}
                             data-saferedirecturl="https://sayan.edu.pe/"
                         >
-                            <strong style={{color: "#676766"}}>Sitio Web:</strong>  sayan.edu.pe
+                            <strong style={{color: "#676766"}}>Sitio Web:</strong>  www.sayan.edu.pe
                         </Link>
                         <Text style={{ ...productDescription, marginBottom: "2px" }}>VISÍTANOS EN:</Text>
                         <Section style={iconContainer}>
@@ -127,22 +132,6 @@ export const SayanTemplate = ({
     </Html >
 );
 }
-
-SayanTemplate.PreviewProps = {
-  name: "Juan",
-  message: [
-    "MATERIALES:",
-    "SESION I  : https://n9.cl/s97lk",
-    "SESION II : https://n9.cl/a9v7k",
-    "https://n9.cl/2zs6v",
-    "SESION III: https://n9.cl/67vd0",
-    "VIDEOS:",
-    "SESION I  : https://n9.cl/a106h",
-    "SESION II : https://n9.cl/u7cos2",
-    "SESION III: https://n9.cl/6q57q"
-    ].join("\n"),
-  curso: "Mecánica de suelos",
-} as SayanEmailTemplateProps;
 
 export default SayanTemplate;
 

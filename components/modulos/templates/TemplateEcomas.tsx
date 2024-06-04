@@ -12,7 +12,7 @@ export const EcomasTemplate = ({
 }: EcomasEmailTemplateProps) => (
   <Html>
     <Head />
-    {/* <Preview>{curso}</Preview> */}
+    <Preview>ECOMÁS Consultoria y Capacitación</Preview>
     <Body style={main}>
       <Container style={{...container, borderRadius: "10px"}}>
         <Section style={logoContainer}>

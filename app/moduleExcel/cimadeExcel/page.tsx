@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import ImageUploader from '@/components/modulos/ecomas/ImageFrom';
+import ImageUploader from '@/components/modulos/cimade/ImageFrom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RiFileExcel2Line } from "react-icons/ri";
@@ -57,7 +57,7 @@ const ExcelDataFrom = () => {
       });
       setImagesAndExcel(updatedImagesAndExcel);
       setExcelLoaded(true);
-      setButtonDisabled(true); // Desactivar el botón cuando se cargan nuevos archivos excel
+      setButtonDisabled(true);
       setNextButtonText("Dibujando");
     }
   };
@@ -82,7 +82,6 @@ const ExcelDataFrom = () => {
         const temario = sheet['B4'] ? sheet['B4'].v : null;
         const ponente = sheet['B5'] ? sheet['B5'].v : null;
         const horas = sheet['B6'] ? sheet['B6'].v : null;
-        //const materiales = sheet['B9'] ? sheet['B9'].v : null;
         resolve({nombres, email, codigo, participacion, actividadAcademica, fechaInicio, fechaFinal, temario, ponente, horas });
       };
       reader.onerror = (error) => {
@@ -114,16 +113,16 @@ const ExcelDataFrom = () => {
   const excelFilesCount = excelFiles.filter(file => file !== null).length;
 
   return (
-    <section className='bg-[#001D51] min-h-screen pb-20'>
+    <section className='bg-[#002e79] min-h-screen pb-20'>
       <div className='flex ml-10'>
       <Image
-        src="/ecomas.png"
-        alt='ecomas'
+        src="/cimade.png"
+        alt='cimade'
         width={250}
         height={200}
         className='mt-5'/>
       </div>
-      <div className='flex justify-center items-center mt-5 gap-6 p-8 bg-[#0060ff]'>
+      <div className='flex justify-center items-center mt-5 gap-6 p-8 bg-[#006eb0]'>
         <h1 className='text-5xl font-extrabold text-white'>Número de módulos</h1>
         <div className='text-gray-500 items-center'>
           <div className='relative'>
@@ -138,13 +137,13 @@ const ExcelDataFrom = () => {
 
       <div className='flex justify-between'>
       <div className="p-10 ml-40 font-mono text-3xl hover:scale-110 duration-300">
-        <button onClick={() => window.history.back()} className="flex items-center bg-[#0060ff]/70 px-16 py-3 text-white rounded-xl uppercase">
+        <button onClick={() => window.history.back()} className="flex items-center bg-[#65036a] px-16 py-3 text-white rounded-xl uppercase">
         <FiChevronsLeft className='mr-2 text-5xl' /> {/* Icono a la izquierda */}
           Atrás
         </button>
       </div>
-        <Link href="/modulePdf/ecomasPdf" className={`flex p-10 mr-40 font-mono text-3xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
-          <button className={`bg-[#0060ff]/70 px-10 py-3 text-white rounded-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
+        <Link href="/modulePdf/cimadePdf" className={`flex p-10 mr-40 font-mono text-3xl hover:scale-110 duration-300 ${!excelLoaded ? 'pointer-events-none' : ''}`}>
+          <button className={`bg-[#65036a] px-10 py-3 text-white rounded-xl uppercase ${!excelLoaded || buttonDisabled ? 'opacity-50' : ''}`} disabled={buttonDisabled}>
             <span className="flex items-center justify-center">
               {nextButtonText === "Siguiente" ? (
                 <>
@@ -161,7 +160,7 @@ const ExcelDataFrom = () => {
           </button>
         </Link>
       </div>
-      <div className='max-w-[1500px] mx-auto grid grid-cols-2 p-4 border-4 border-[#007aff] rounded-2xl'>
+      <div className='max-w-[1500px] mx-auto grid grid-cols-2 p-4 border-4 border-[#65036a] rounded-2xl'>
         <div className=''>
           <div className='image-container relative'>
           </div>

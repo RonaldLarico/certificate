@@ -27,7 +27,7 @@ export async function POST(req: { json: () => Promise<RequestBody> }) {
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
-    const newFolderName = `Modulos/${groupName}`;
+    const newFolderName = `MODULARES/${groupName}`;
     const newFolderPath = path.join(folderPath, newFolderName);
     if (!fs.existsSync(newFolderPath)) {
       fs.mkdirSync(newFolderPath, { recursive: true });

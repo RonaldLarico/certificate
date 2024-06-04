@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { openDatabase }  from '@/components/modulos/ecomas/database/index';
+import { openDatabase }  from '@/components/modulos/promas/database/index';
 import { FaRegImages } from "react-icons/fa6";
 import { BsImages } from "react-icons/bs";
 
@@ -34,8 +34,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
     const getStoredImages = async () => {
       try {
         const db = await openDatabase();
-        const transaction = db.transaction(['ecomas'], 'readonly');
-        const objectStore = transaction.objectStore('ecomas');
+        const transaction = db.transaction(['promas'], 'readonly');
+        const objectStore = transaction.objectStore('promas');
         const storedImages: File[] = [];
         objectStore.openCursor().onsuccess = function(event) {
           const cursor = (event.target as IDBRequest).result;
@@ -87,8 +87,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
   const saveImages = async (images: File[]) => {
     try {
       const db = await openDatabase();
-      const transaction = db.transaction(['ecomas'], 'readwrite');
-      const objectStore = transaction.objectStore('ecomas');
+      const transaction = db.transaction(['promas'], 'readwrite');
+      const objectStore = transaction.objectStore('promas');
       images.forEach((image) => {
         const request = objectStore.add(image);
         request.onerror = (event) => {
@@ -97,8 +97,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
       });
       transaction.oncomplete = async () => {
         const storedImages: File[] = [];
-        const newTransaction = db.transaction(['ecomas'], 'readonly');
-        const newObjectStore = newTransaction.objectStore('ecomas');
+        const newTransaction = db.transaction(['promas'], 'readonly');
+        const newObjectStore = newTransaction.objectStore('promas');
         const cursor = newObjectStore.openCursor();
         cursor.onsuccess = function (event) {
           const cursor = (event.target as IDBRequest).result;
@@ -123,8 +123,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
   const handleDeleteAllImages = async () => {
     try {
       const db = await openDatabase();
-      const transaction = db.transaction(['ecomas'], 'readwrite');
-      const objectStore = transaction.objectStore('ecomas');
+      const transaction = db.transaction(['promas'], 'readwrite');
+      const objectStore = transaction.objectStore('promas');
       const request = objectStore.clear();
       request.onsuccess = () => {
         console.log('Todas las imágenes eliminadas correctamente.');
@@ -289,8 +289,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
 
           try {
             const db = await openDatabase();
-            const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
-            const objectStore = transaction.objectStore('ImagesEcomas');
+            const transaction = db.transaction(['ImagesPromas'], 'readwrite');
+            const objectStore = transaction.objectStore('ImagesPromas');
             const request = objectStore.add(file);
             request.onerror = (event) => {
               console.error('Error al guardar la imagen en la base de datos:', (event.target as IDBRequest).error);
@@ -376,17 +376,17 @@ useEffect(() => {
   //{console.log('convertedImages:', convertedImages)}
   return (
     <div className=''>
-      <div className='inline-flex w-full justify-center items-center mb-10 p-4 font-bold text-2xl bg-[#0060ff] text-white rounded-s-xl'>
+      <div className='inline-flex w-full justify-center items-center mb-10 p-4 font-bold text-2xl bg-[#B20076] text-white rounded-s-xl'>
         <FaRegImages className='text-4xl mr-2'/>
         <h1 >Cargar imagenes ({numModules})</h1>
       </div>
-      <div className='flex justify-center border-b-4 border-[#007aff] image-container relative mb-10 text-white font-mono'>
-        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl mb-10 bg-[#0060ff] cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
+      <div className='flex justify-center border-b-4 border-[#CF0072] image-container relative mb-10 text-white font-mono'>
+        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl mb-10 bg-[#B20076] cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
       </div>
       {imagesToShow.map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
-            <div className='border-2 border-[#007aff] py-3 w-full mr-10 rounded-lg font-bold'>
+            <div className='border-2 border-[#FD4660] py-3 w-full mr-10 rounded-lg font-bold'>
               <p className='ml-2 text-gray-200'>{file.name}</p>
             </div>
           )}
@@ -417,7 +417,6 @@ useEffect(() => {
         ))}
         </div>
       </div> */}
-
     <button onClick={handleDeleteAllImages} className='inline-flex justify-center items-center mt-5 mb-5 p-3 bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>
       <BsImages className='text-3xl mr-2'/>
       <h1>Nuevo diseño</h1>

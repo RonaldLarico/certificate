@@ -58,7 +58,7 @@ export async function POST(req: { json: () => Promise<RequestBody> }): Promise<N
       case 'Promas':
         emailComponent = <PromasTemplate groupName={groupName} dataString={dataString} />;
         break;
-      /* case 'Sayan':
+      case 'Sayan':
         emailComponent = <SayanTemplate groupName={groupName} dataString={dataString} />;
         break;
       case 'Binex':
@@ -66,7 +66,7 @@ export async function POST(req: { json: () => Promise<RequestBody> }): Promise<N
         break;
       case 'Rizo':
         emailComponent = <RizoTemplate groupName={groupName} dataString={dataString} />;
-        break; */
+        break;
       default:
         throw new Error('Invalid group name');
     }

@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { openDatabase }  from '@/components/modulos/ecomas/database/index';
+import { openDatabase }  from '@/components/modulos/cimade/database/index';
 import { FaRegImages } from "react-icons/fa6";
 import { BsImages } from "react-icons/bs";
 
@@ -34,8 +34,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
     const getStoredImages = async () => {
       try {
         const db = await openDatabase();
-        const transaction = db.transaction(['ecomas'], 'readonly');
-        const objectStore = transaction.objectStore('ecomas');
+        const transaction = db.transaction(['cimade'], 'readonly');
+        const objectStore = transaction.objectStore('cimade');
         const storedImages: File[] = [];
         objectStore.openCursor().onsuccess = function(event) {
           const cursor = (event.target as IDBRequest).result;
@@ -47,20 +47,18 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ numModules, excelData }) 
         setImagesToShow(storedImages);
         setImagesLoaded(storedImages.length > 0);
       } catch (error) {
-        console.error('Error al abrir la base de datossssssssssssss:', error);
+        console.error('Error al abrir la base de datos:', error);
       }
     };
     getStoredImages();
   }, []);
 
   useEffect(() => {
-    // Ordenar las imágenes según los números en sus nombres
     const sortedImages = [...imagesToShow].sort((a, b) => {
       const numberA = getNumberFromFileName(a.name);
       const numberB = getNumberFromFileName(b.name);
       return numberA - numberB;
     });
-    // Obtener las imágenes a mostrar según el número de módulos seleccionado
     const imagesToDisplay = sortedImages.slice(0, numModules);
     setImagesToShow(imagesToDisplay);
   }, [numModules]);
@@ -87,8 +85,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
   const saveImages = async (images: File[]) => {
     try {
       const db = await openDatabase();
-      const transaction = db.transaction(['ecomas'], 'readwrite');
-      const objectStore = transaction.objectStore('ecomas');
+      const transaction = db.transaction(['cimade'], 'readwrite');
+      const objectStore = transaction.objectStore('cimade');
       images.forEach((image) => {
         const request = objectStore.add(image);
         request.onerror = (event) => {
@@ -97,8 +95,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
       });
       transaction.oncomplete = async () => {
         const storedImages: File[] = [];
-        const newTransaction = db.transaction(['ecomas'], 'readonly');
-        const newObjectStore = newTransaction.objectStore('ecomas');
+        const newTransaction = db.transaction(['cimade'], 'readonly');
+        const newObjectStore = newTransaction.objectStore('cimade');
         const cursor = newObjectStore.openCursor();
         cursor.onsuccess = function (event) {
           const cursor = (event.target as IDBRequest).result;
@@ -123,8 +121,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
   const handleDeleteAllImages = async () => {
     try {
       const db = await openDatabase();
-      const transaction = db.transaction(['ecomas'], 'readwrite');
-      const objectStore = transaction.objectStore('ecomas');
+      const transaction = db.transaction(['cimade'], 'readwrite');
+      const objectStore = transaction.objectStore('cimade');
       const request = objectStore.clear();
       request.onsuccess = () => {
         console.log('Todas las imágenes eliminadas correctamente.');
@@ -200,10 +198,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
           const x = canvas.width / 6.6; // Posición X
           let yy = canvas.height / 3.7; // Posición Y
           let words;
-          // Dividir el texto en palabras
           if (selectedData && selectedData.ponente !== null) {
             words = selectedData.ponente.split(' ');
-            // Resto del código...
           } else {
             console.error("El ponente no está definido o es nulo.");
           }
@@ -213,25 +209,19 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
           ctx.font = `bold ${fontSize}px Century Gothic`;
           ctx.textAlign = 'center';
           if (words) {
-            // Iterar sobre cada palabra
             for (const word of words) {
-                // Agregar palabra a la línea actual
                 const testLine = line + word + ' ';
-                // Medir el ancho de la línea actual
                 const metrics = ctx.measureText(testLine);
                 const testWidth = metrics.width;
-                // Si la línea actual excede el ancho máximo permitido, dibujar la línea actual y comenzar una nueva línea
                 if (testWidth > maxWidthh) {
                     ctx.fillText(line, x, yy);
                     line = word + ' ';
                     yy += lineHeightt;
                 } else {
-                    // Si no excede el ancho máximo, continuar agregando palabras a la línea actual
                     line = testLine;
                 }
             }
           }
-          // Dibujar la última línea restante
           ctx.fillText(line, x, yy);
 
           const textYPx = 2835;
@@ -289,8 +279,8 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
 
           try {
             const db = await openDatabase();
-            const transaction = db.transaction(['ImagesEcomas'], 'readwrite');
-            const objectStore = transaction.objectStore('ImagesEcomas');
+            const transaction = db.transaction(['ImagesCimade'], 'readwrite');
+            const objectStore = transaction.objectStore('ImagesCimade');
             const request = objectStore.add(file);
             request.onerror = (event) => {
               console.error('Error al guardar la imagen en la base de datos:', (event.target as IDBRequest).error);
@@ -318,7 +308,6 @@ const handleImage = async (event: ChangeEvent<HTMLInputElement>) => {
 
   const groupedConvertedImages: { [name: string]: { image: File; number: number }[] } = {};
 
-// Iterar sobre las imágenes convertidas y agruparlas por nombre
 convertedImages.forEach((image) => {
   const imageNameParts = image.name.split('_');
   const imageName = imageNameParts[0];
@@ -341,12 +330,10 @@ if (excelData) {
         const email = data.email[index];
         const entry = { nombre, email };
         dataToSave.push(entry);
-        //console.log(`Nombre: ${nombre}, Email: ${email}, Materiales: ${materiales}`);
       });
     }
   });
   sessionStorage.setItem('emailData', JSON.stringify(dataToSave))
-  //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('emailData'));
 }
 
 if (excelData) {
@@ -355,11 +342,9 @@ if (excelData) {
     const actividadAcademica = data.actividadAcademica;
     if (actividadAcademica) {
       actividadAcademicaData.push(actividadAcademica);
-      //console.log(`moduloooo: ${actividadAcademica}`)
     }
   });
   sessionStorage.setItem('actividadAcademicaData', JSON.stringify(actividadAcademicaData));
-  //console.log("Datos guardados en sessionStorage:", sessionStorage.getItem('actividadAcademicaData'));
 }
 
 useEffect(() => {
@@ -373,20 +358,19 @@ useEffect(() => {
   });
 }, [excelData]);
 
-  //{console.log('convertedImages:', convertedImages)}
   return (
     <div className=''>
-      <div className='inline-flex w-full justify-center items-center mb-10 p-4 font-bold text-2xl bg-[#0060ff] text-white rounded-s-xl'>
+      <div className='inline-flex w-full justify-center items-center mb-10 p-4 font-bold text-2xl bg-[#006eb0] text-white rounded-s-xl'>
         <FaRegImages className='text-4xl mr-2'/>
         <h1 >Cargar imagenes ({numModules})</h1>
       </div>
-      <div className='flex justify-center border-b-4 border-[#007aff] image-container relative mb-10 text-white font-mono'>
-        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl mb-10 bg-[#0060ff] cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
+      <div className='flex justify-center border-b-4 border-[#65036a] image-container relative mb-10 text-white font-mono'>
+        <input type='file' accept="image/*" onChange={handleImage} multiple className={`p-4 rounded-xl mb-10 bg-[#006eb0] cursor-pointer hover:scale-110 duration-300 ${imagesLoaded ? 'opacity-50 pointer-events-none' : ''}`} />
       </div>
       {imagesToShow.map((file, index) => (
         <div key={index} className="image-container relative mb-4 flex justify-between items-center">
           {file && (
-            <div className='border-2 border-[#007aff] py-3 w-full mr-10 rounded-lg font-bold'>
+            <div className='border-2 border-[#ff00d4] py-3 w-full mr-10 rounded-lg font-bold'>
               <p className='ml-2 text-gray-200'>{file.name}</p>
             </div>
           )}
@@ -417,7 +401,6 @@ useEffect(() => {
         ))}
         </div>
       </div> */}
-
     <button onClick={handleDeleteAllImages} className='inline-flex justify-center items-center mt-5 mb-5 p-3 bg-red-600 text-white rounded-lg uppercase font-extrabold text-xl hover:scale-110 duration-300'>
       <BsImages className='text-3xl mr-2'/>
       <h1>Nuevo diseño</h1>
